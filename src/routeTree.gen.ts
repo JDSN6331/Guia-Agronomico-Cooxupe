@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as DefinirSenhaRouteImport } from './routes/definir-senha'
+import { Route as AuthenticatedCafeRouteImport } from './routes/_authenticated/cafe'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
+import { Route as AuthenticatedMilhoSojaRouteImport } from './routes/_authenticated/milho-soja'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,40 +30,58 @@ const DefinirSenhaRoute = DefinirSenhaRouteImport.update({
   path: '/definir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCafeRoute = AuthenticatedCafeRouteImport.update({
+  id: '/cafe',
+  path: '/cafe',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInicioRoute = AuthenticatedInicioRouteImport.update({
   id: '/inicio',
   path: '/inicio',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMilhoSojaRoute = AuthenticatedMilhoSojaRouteImport.update({
+  id: '/milho-soja',
+  path: '/milho-soja',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/definir-senha': typeof DefinirSenhaRoute
+  '/cafe': typeof AuthenticatedCafeRoute
   '/inicio': typeof AuthenticatedInicioRoute
+  '/milho-soja': typeof AuthenticatedMilhoSojaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/definir-senha': typeof DefinirSenhaRoute
+  '/cafe': typeof AuthenticatedCafeRoute
   '/inicio': typeof AuthenticatedInicioRoute
+  '/milho-soja': typeof AuthenticatedMilhoSojaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/definir-senha': typeof DefinirSenhaRoute
+  '/_authenticated/cafe': typeof AuthenticatedCafeRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
+  '/_authenticated/milho-soja': typeof AuthenticatedMilhoSojaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/definir-senha' | '/inicio'
+  fullPaths: '/' | '/definir-senha' | '/cafe' | '/inicio' | '/milho-soja'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/definir-senha' | '/inicio'
+  to: '/' | '/definir-senha' | '/cafe' | '/inicio' | '/milho-soja'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/definir-senha'
+    | '/_authenticated/cafe'
     | '/_authenticated/inicio'
+    | '/_authenticated/milho-soja'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,6 +113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/cafe': {
+      id: '/_authenticated/cafe'
+      path: '/cafe'
+      fullPath: '/cafe'
+      preLoaderRoute: typeof AuthenticatedCafeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/inicio': {
       id: '/_authenticated/inicio'
       path: '/inicio'
@@ -100,15 +127,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInicioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/milho-soja': {
+      id: '/_authenticated/milho-soja'
+      path: '/milho-soja'
+      fullPath: '/milho-soja'
+      preLoaderRoute: typeof AuthenticatedMilhoSojaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCafeRoute: typeof AuthenticatedCafeRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
+  AuthenticatedMilhoSojaRoute: typeof AuthenticatedMilhoSojaRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCafeRoute: AuthenticatedCafeRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
+  AuthenticatedMilhoSojaRoute: AuthenticatedMilhoSojaRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

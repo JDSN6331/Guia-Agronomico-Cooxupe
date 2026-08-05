@@ -120,7 +120,7 @@ export function Campo({ rotulo, children }: { rotulo: string; children: ReactNod
   );
 }
 
-export function Carencia({ dias }: { dias?: string }) {
+export function Carencia({ dias }: { dias?: string | undefined }) {
   if (!dias) return null;
   const n = Number(String(dias).replace(/[^\d]/g, ""));
   const isento = n === 0;
