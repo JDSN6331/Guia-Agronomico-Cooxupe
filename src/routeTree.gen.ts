@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as DefinirSenhaRouteImport } from './routes/definir-senha'
 import { Route as AuthenticatedCafeRouteImport } from './routes/_authenticated/cafe'
+import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
+import { Route as AuthenticatedFoliarRouteImport } from './routes/_authenticated/foliar'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedMilhoSojaRouteImport } from './routes/_authenticated/milho-soja'
 
@@ -35,6 +37,16 @@ const AuthenticatedCafeRoute = AuthenticatedCafeRouteImport.update({
   path: '/cafe',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
+  id: '/calendario',
+  path: '/calendario',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFoliarRoute = AuthenticatedFoliarRouteImport.update({
+  id: '/foliar',
+  path: '/foliar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInicioRoute = AuthenticatedInicioRouteImport.update({
   id: '/inicio',
   path: '/inicio',
@@ -50,6 +62,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/definir-senha': typeof DefinirSenhaRoute
   '/cafe': typeof AuthenticatedCafeRoute
+  '/calendario': typeof AuthenticatedCalendarioRoute
+  '/foliar': typeof AuthenticatedFoliarRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/milho-soja': typeof AuthenticatedMilhoSojaRoute
 }
@@ -57,6 +71,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/definir-senha': typeof DefinirSenhaRoute
   '/cafe': typeof AuthenticatedCafeRoute
+  '/calendario': typeof AuthenticatedCalendarioRoute
+  '/foliar': typeof AuthenticatedFoliarRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/milho-soja': typeof AuthenticatedMilhoSojaRoute
 }
@@ -66,20 +82,38 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/definir-senha': typeof DefinirSenhaRoute
   '/_authenticated/cafe': typeof AuthenticatedCafeRoute
+  '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
+  '/_authenticated/foliar': typeof AuthenticatedFoliarRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/milho-soja': typeof AuthenticatedMilhoSojaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/definir-senha' | '/cafe' | '/inicio' | '/milho-soja'
+  fullPaths:
+    | '/'
+    | '/definir-senha'
+    | '/cafe'
+    | '/calendario'
+    | '/foliar'
+    | '/inicio'
+    | '/milho-soja'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/definir-senha' | '/cafe' | '/inicio' | '/milho-soja'
+  to:
+    | '/'
+    | '/definir-senha'
+    | '/cafe'
+    | '/calendario'
+    | '/foliar'
+    | '/inicio'
+    | '/milho-soja'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/definir-senha'
     | '/_authenticated/cafe'
+    | '/_authenticated/calendario'
+    | '/_authenticated/foliar'
     | '/_authenticated/inicio'
     | '/_authenticated/milho-soja'
   fileRoutesById: FileRoutesById
@@ -120,6 +154,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCafeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/calendario': {
+      id: '/_authenticated/calendario'
+      path: '/calendario'
+      fullPath: '/calendario'
+      preLoaderRoute: typeof AuthenticatedCalendarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/foliar': {
+      id: '/_authenticated/foliar'
+      path: '/foliar'
+      fullPath: '/foliar'
+      preLoaderRoute: typeof AuthenticatedFoliarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/inicio': {
       id: '/_authenticated/inicio'
       path: '/inicio'
@@ -139,12 +187,16 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCafeRoute: typeof AuthenticatedCafeRoute
+  AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
+  AuthenticatedFoliarRoute: typeof AuthenticatedFoliarRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedMilhoSojaRoute: typeof AuthenticatedMilhoSojaRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCafeRoute: AuthenticatedCafeRoute,
+  AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
+  AuthenticatedFoliarRoute: AuthenticatedFoliarRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedMilhoSojaRoute: AuthenticatedMilhoSojaRoute,
 }
