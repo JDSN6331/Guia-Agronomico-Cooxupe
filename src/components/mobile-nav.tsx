@@ -70,7 +70,7 @@ export function MobileNav() {
                     className={cn(
                       "grid size-8 place-items-center rounded-full transition-colors duration-150",
                       isActive
-                        ? "bg-[#133d25] text-gold shadow-sm ring-1 ring-gold/30"
+                        ? "bg-[#1c5c36] text-white dark:bg-[#10351e] dark:text-gold shadow-md ring-1 ring-gold/40"
                         : "bg-transparent text-muted-foreground hover:text-foreground",
                     )}
                   >
@@ -98,7 +98,7 @@ export function MobileNav() {
               className={cn(
                 "grid size-8 place-items-center rounded-full transition-colors duration-150",
                 isMaisAtivo
-                  ? "bg-[#133d25] text-gold shadow-sm ring-1 ring-gold/30"
+                  ? "bg-[#1c5c36] text-white dark:bg-[#10351e] dark:text-gold shadow-md ring-1 ring-gold/40"
                   : "bg-transparent text-muted-foreground hover:text-foreground",
               )}
             >

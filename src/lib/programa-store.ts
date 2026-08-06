@@ -47,7 +47,6 @@ export type VersaoPlanilha = {
   enviadoPor: string;
   totalCafe: number;
   totalMilhoSoja: number;
-  dados: ProgramaData;
 };
 
 export type ProgramaData = {
@@ -63,6 +62,16 @@ export type ProgramaData = {
 
 const STORAGE_KEY = "guia_agronomico_programa_data";
 const HISTORICO_KEY = "guia_agronomico_historico_versoes";
+
+const VERSAO_OFICIAL_PADRAO: VersaoPlanilha = {
+  id: "versao-oficial-2026",
+  nomeArquivo: "Programa de uso 2026.xlsx",
+  versao: "2026.1 (Oficial)",
+  dataEnvio: "2026-08-05T12:00:00.000Z",
+  enviadoPor: "Sistema (Oficial)",
+  totalCafe: (raw2026 as unknown as ProgramaData).cafe?.length || 463,
+  totalMilhoSoja: (raw2026 as unknown as ProgramaData).milhoSoja?.length || 517,
+};
 
 export function obterProgramaAtual(): ProgramaData {
   if (typeof window !== "undefined") {
@@ -81,25 +90,31 @@ export function obterProgramaAtual(): ProgramaData {
   return raw2026 as unknown as ProgramaData;
 }
 
-export function salvarProgramaAtual(novoPrograma: ProgramaData, nomeArquivo = "Programa de uso 2026.xlsx", usuario = "Administrador") {
+export function salvarProgramaAtual(
+  novoPrograma: ProgramaData,
+  nomeArquivo = "Programa de uso 2026.xlsx",
+  usuario = "Administrador",
+) {
   if (typeof window !== "undefined") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(novoPrograma));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(novoPrograma));
 
-    // Adicionar registro no histórico
-    const historicoAtual = obterHistoricoVersoes();
-    const novaVersao: VersaoPlanilha = {
-      id: `versao-${Date.now()}`,
-      nomeArquivo,
-      versao: novoPrograma.versao || `v${Date.now()}`,
-      dataEnvio: new Date().toISOString(),
-      enviadoPor: usuario,
-      totalCafe: novoPrograma.cafe?.length || 0,
-      totalMilhoSoja: novoPrograma.milhoSoja?.length || 0,
-      dados: novoPrograma,
-    };
+      const historicoAtual = obterHistoricoVersoes();
+      const novaVersao: VersaoPlanilha = {
+        id: `versao-${Date.now()}`,
+        nomeArquivo,
+        versao: novoPrograma.versao || `v${Date.now()}`,
+        dataEnvio: new Date().toISOString(),
+        enviadoPor: usuario,
+        totalCafe: novoPrograma.cafe?.length || 0,
+        totalMilhoSoja: novoPrograma.milhoSoja?.length || 0,
+      };
 
-    const novoHistorico = [novaVersao, ...historicoAtual].slice(0, 20); // guarda até 20 versões
-    localStorage.setItem(HISTORICO_KEY, JSON.stringify(novoHistorico));
+      const novoHistorico = [novaVersao, ...historicoAtual.filter((h) => h.id !== novaVersao.id)].slice(0, 15);
+      localStorage.setItem(HISTORICO_KEY, JSON.stringify(novoHistorico));
+    } catch (err) {
+      console.warn("[Programa Store] Erro ao salvar versão no localStorage:", err);
+    }
 
     window.dispatchEvent(new Event("storage_programa_atualizado"));
   }
@@ -110,29 +125,25 @@ export function obterHistoricoVersoes(): VersaoPlanilha[] {
     try {
       const salvo = localStorage.getItem(HISTORICO_KEY);
       if (salvo) {
-        return JSON.parse(salvo) as VersaoPlanilha[];
+        const list = JSON.parse(salvo);
+        if (Array.isArray(list) && list.length > 0) {
+          return list as VersaoPlanilha[];
+        }
       }
     } catch (e) {
       console.warn("[Programa Store] Erro ao ler histórico:", e);
     }
   }
-  return [
-    {
-      id: "versao-oficial-2026",
-      nomeArquivo: "Programa de uso 2026.xlsx",
-      versao: "2026.1 (Oficial)",
-      dataEnvio: new Date().toISOString(),
-      enviadoPor: "Sistema (Oficial)",
-      totalCafe: (raw2026 as unknown as ProgramaData).cafe?.length || 0,
-      totalMilhoSoja: (raw2026 as unknown as ProgramaData).milhoSoja?.length || 0,
-      dados: raw2026 as unknown as ProgramaData,
-    },
-  ];
+  return [VERSAO_OFICIAL_PADRAO];
 }
 
 export function restaurarProgramaPadrao() {
   if (typeof window !== "undefined") {
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignora
+    }
     window.dispatchEvent(new Event("storage_programa_atualizado"));
   }
 }

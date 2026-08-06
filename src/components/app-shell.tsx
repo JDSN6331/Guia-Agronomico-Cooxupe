@@ -132,7 +132,7 @@ export function AppShell({
             )}
             activeProps={{
               className: cn(
-                "bg-[#133d25] text-white shadow-sm font-bold border-gold/40 hover:bg-[#133d25] hover:text-white",
+                "bg-[#1c5c36] text-white dark:bg-[#10351e] dark:text-white shadow-md font-bold border-gold/50 hover:bg-[#1c5c36] dark:hover:bg-[#10351e]",
                 !compact &&
                   "before:absolute before:left-0 before:top-1/2 before:h-5 before:w-1.5 before:-translate-y-1/2 before:rounded-r-full before:bg-gold",
               ),

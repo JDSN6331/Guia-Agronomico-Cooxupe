@@ -473,7 +473,7 @@ function PaginaGestaoSistema() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              exportarProgramaParaExcel(v.dados, `Historico_${v.nomeArquivo.replace(/\.[^/.]+$/, "")}.csv`);
+                              exportarProgramaParaExcel(programaAtual, `Historico_${v.nomeArquivo.replace(/\.[^/.]+$/, "")}.csv`);
                               toast.success(`Exportando versão "${v.nomeArquivo}"...`);
                             }}
                             className="h-8 text-[11px] gap-1 border-gold/40 text-gold hover:bg-gold hover:text-black font-semibold"
