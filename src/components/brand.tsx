@@ -25,7 +25,7 @@ export function Brand({
           <span className="block font-display text-[15px] font-bold tracking-tight text-foreground">
             {APP.nome}
           </span>
-          <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#c59b27] dark:text-amber-400">
+          <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">
             Cooxupé
           </span>
         </span>
