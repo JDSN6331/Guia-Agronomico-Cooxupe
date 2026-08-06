@@ -96,18 +96,23 @@ function Inicio() {
       descricao={APP.nomeCompleto}
     >
       <div className="mx-auto max-w-6xl space-y-8">
-        {/* Banner Principal no Verde Original com Dourado Elegante e Nova Logo */}
-        <section className="panel relative overflow-hidden bg-primary p-7 sm:p-9 text-primary-foreground">
-          <div className="field-grid absolute inset-0 opacity-30" />
-          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        {/* Banner Principal — verde profundo com acento dourado */}
+        <section className="panel banner-campo relative overflow-hidden border-transparent p-7 sm:p-9 text-primary-foreground">
+          <div className="field-grid absolute inset-0 opacity-20" />
+          <div
+            className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full opacity-40 blur-3xl"
+            style={{ background: "radial-gradient(circle, var(--color-gold), transparent 70%)" }}
+          />
+          <div className="relative flex flex-col justify-between gap-8 sm:flex-row sm:items-center">
             <div className="max-w-xl">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 border border-primary-foreground/25 px-3 py-1 text-xs font-semibold text-primary-foreground/90">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/15 px-3 py-1 text-xs font-semibold text-gold">
                 <ShieldCheck className="size-3.5" /> Conteúdo oficial · {APP.equipe}
               </span>
-              <h2 className="mt-4 font-display text-2xl font-bold sm:text-3xl text-primary-foreground">
+              <h2 className="mt-4 font-display text-2xl font-bold text-primary-foreground sm:text-3xl">
                 Programa de Manejo Agronômico
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-primary-foreground/80">
+              <span className="gold-rule mt-3 block h-px w-28 rounded-full" />
+              <p className="mt-3 text-sm leading-relaxed text-primary-foreground/85">
                 Consulte produtos por cultura, ingrediente ativo, fornecedor ou grupo. Cada ficha traz
                 dosagem por estágio, instruções de aplicação, função e intervalo de segurança.
               </p>
@@ -115,7 +120,7 @@ function Inicio() {
               <div className="mt-6 flex flex-wrap gap-2">
                 <Link
                   to="/cafe"
-                  className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-white/90 shadow-sm"
+                  className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-gold-foreground shadow-sm transition-all hover:brightness-105"
                 >
                   Abrir catálogo de Café <ArrowRight className="size-4" />
                 </Link>
@@ -128,23 +133,26 @@ function Inicio() {
               </div>
             </div>
 
-            <div className="grid size-28 sm:size-36 place-items-center rounded-2xl bg-white/10 p-3 backdrop-blur-md border border-primary-foreground/20 shadow-lg shrink-0">
-              <img
-                src="/logo.png"
-                alt="Guia Agronômico Cooxupé"
-                className="size-full object-contain"
-              />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Guia Agronômico Cooxupé"
+              className="size-28 shrink-0 object-contain drop-shadow-xl sm:size-40"
+            />
           </div>
         </section>
 
 
-        {/* Métricas com Destaque Dourado Elegante (#c59b27 / text-amber-500) */}
+
+        {/* Métricas com destaque dourado */}
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {metricas.map((m) => (
-            <div key={m.rotulo} className="panel p-4 hover:border-amber-500/30 transition-colors">
-              <p className="font-display text-3xl font-bold text-[#c59b27] dark:text-amber-400">{m.valor}</p>
-              <p className="mt-1 text-xs leading-snug text-muted-foreground font-medium">{m.rotulo}</p>
+            <div
+              key={m.rotulo}
+              className="panel relative overflow-hidden p-4 transition-colors hover:border-gold/40"
+            >
+              <span className="absolute inset-x-0 top-0 h-0.5 bg-gold/70" />
+              <p className="font-display text-3xl font-bold text-gold">{m.valor}</p>
+              <p className="mt-1 text-xs font-medium leading-snug text-muted-foreground">{m.rotulo}</p>
             </div>
           ))}
         </section>
@@ -152,18 +160,23 @@ function Inicio() {
         {/* Atalhos Rápidos */}
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ATALHOS.map((a) => (
-            <Link key={a.to} to={a.to} className="panel group p-5 transition-all hover:shadow-lifted hover:border-amber-500/30">
-              <span className="grid size-10 place-items-center rounded-xl bg-secondary text-secondary-foreground group-hover:bg-amber-500/10 group-hover:text-[#c59b27] transition-colors">
+            <Link
+              key={a.to}
+              to={a.to}
+              className="panel group p-5 transition-all hover:border-gold/40 hover:shadow-lifted"
+            >
+              <span className="grid size-10 place-items-center rounded-xl bg-accent text-accent-foreground transition-colors group-hover:bg-gold/15 group-hover:text-gold">
                 <a.icon size={22} />
               </span>
               <h3 className="mt-4 flex items-center gap-2 font-display text-base font-semibold">
                 {a.titulo}
-                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 text-[#c59b27]" />
+                <ArrowRight className="size-4 -translate-x-1 text-gold opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{a.texto}</p>
             </Link>
           ))}
         </section>
+
 
         <section className="flex gap-3 rounded-xl border border-terra/40 bg-terra/10 p-4">
           <TriangleAlert className="mt-0.5 size-5 shrink-0 text-terra" />
@@ -175,9 +188,9 @@ function Inicio() {
         </section>
 
         {isAdmin && (
-          <section className="panel p-5 border-amber-500/20">
+          <section className="panel border-gold/25 p-5">
             <h3 className="font-display text-base font-semibold flex items-center gap-2">
-              <span className="inline-block size-2 rounded-full bg-[#c59b27]" />
+              <span className="inline-block size-2 rounded-full bg-gold" />
               Administração
             </h3>
             <p className="mt-1.5 text-sm text-muted-foreground">
@@ -187,7 +200,7 @@ function Inicio() {
               to="/usuarios"
               className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent"
             >
-              Gerenciar usuários <ArrowRight className="size-4 text-[#c59b27]" />
+              Gerenciar usuários <ArrowRight className="size-4 text-gold" />
             </Link>
           </section>
         )}
