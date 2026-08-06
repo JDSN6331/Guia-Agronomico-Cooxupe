@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Leaf, TestTube2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { BarraFiltros, VazioResultado } from "@/components/catalogo";
+import { AcoesFichaProduto, BarraFiltros, VazioResultado } from "@/components/catalogo";
 import { Badge } from "@/components/ui/badge";
 import { buscaEm, programa, unicos } from "@/data/programa";
+import { FlaticonFoliar } from "@/components/flaticon-icons";
 
 export const Route = createFileRoute("/_authenticated/foliar")({
   head: () => ({
@@ -18,8 +18,9 @@ export const Route = createFileRoute("/_authenticated/foliar")({
       { property: "og:title", content: "Linha Foliar | AgroBase" },
       {
         property: "og:description",
-        content: "Fertilizantes foliares e recomendações por nutriente — Programa de Uso 2026.",
+        content: "Fertilizantes foliares e recomendações por nutriente — Programa de Manejo Técnico.",
       },
+
     ],
   }),
   component: PaginaFoliar,
@@ -51,8 +52,8 @@ function PaginaFoliar() {
     >
       <div className="mx-auto max-w-6xl space-y-6">
         <section className="panel p-5">
-          <h2 className="flex items-center gap-2 font-display text-base font-semibold">
-            <Leaf className="size-4 text-primary" /> Produtos indicados por nutriente
+          <h2 className="flex items-center gap-2.5 font-display text-base font-semibold">
+            <FlaticonFoliar size={20} className="text-primary" /> Produtos indicados por nutriente
           </h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {programa.nutrientes.map((n) => (
@@ -99,12 +100,12 @@ function PaginaFoliar() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {lista.map((i) => (
-              <article key={i.id} className="panel p-4">
+              <article key={i.id} className="panel flex flex-col justify-between p-4">
                 <div className="flex items-start gap-3">
                   <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
-                    <TestTube2 className="size-4" />
+                    <FlaticonFoliar size={20} />
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-display text-sm leading-snug font-semibold">
                       {i.descricao}
                     </p>
@@ -118,6 +119,15 @@ function PaginaFoliar() {
                     </div>
                   </div>
                 </div>
+
+                <AcoesFichaProduto
+                  dados={{
+                    titulo: i.descricao,
+                    cultura: "Adubação Foliar",
+                    fornecedor: i.fornecedor,
+                    grupo: i.classe,
+                  }}
+                />
               </article>
             ))}
           </div>
@@ -126,3 +136,4 @@ function PaginaFoliar() {
     </AppShell>
   );
 }
+

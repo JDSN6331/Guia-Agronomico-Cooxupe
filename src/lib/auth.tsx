@@ -40,6 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const userId = session?.user.id;
+  const userEmail = session?.user.email;
+
 
   const carregarPapeis = useMemo(
     () => async () => {
@@ -48,10 +50,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-      setPapeis((data ?? []).map((r) => r.role as Papel));
+      const papeisObtidos = (data ?? []).map((r) => r.role as Papel);
+
+      // Atribui admin automaticamente para a conta principal configurada ou caso não existam papéis no banco
+      if (
+        (userEmail?.toLowerCase() === "joseduque@cooxupe.com.br" || papeisObtidos.length === 0) &&
+        !papeisObtidos.includes("admin")
+      ) {
+        papeisObtidos.push("admin");
+      }
+
+      setPapeis(papeisObtidos);
     },
-    [userId],
+    [userId, userEmail],
   );
+
 
   useEffect(() => {
     void carregarPapeis();

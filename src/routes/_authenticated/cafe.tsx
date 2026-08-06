@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Coffee } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { BarraFiltros, Campo, Carencia, VazioResultado } from "@/components/catalogo";
+import { AcoesFichaProduto, BarraFiltros, Campo, Carencia, VazioResultado } from "@/components/catalogo";
 import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
@@ -11,6 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { buscaEm, programa, unicos, type ProdutoCafe } from "@/data/programa";
+import { FlaticonCoffee } from "@/components/flaticon-icons";
 
 export const Route = createFileRoute("/_authenticated/cafe")({
   head: () => ({
@@ -24,8 +24,9 @@ export const Route = createFileRoute("/_authenticated/cafe")({
       { property: "og:title", content: "Catálogo Café | AgroBase" },
       {
         property: "og:description",
-        content: "Dosagens por estágio da lavoura de café — Programa de Uso 2026.",
+        content: "Dosagens por estágio da lavoura de café — Programa de Manejo Técnico.",
       },
+
     ],
   }),
   component: PaginaCafe,
@@ -113,7 +114,7 @@ function Ficha({ produto: p }: { produto: ProdutoCafe }) {
       <AccordionTrigger className="py-4 hover:no-underline">
         <div className="flex min-w-0 flex-1 items-start gap-3 text-left">
           <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
-            <Coffee className="size-4" />
+            <FlaticonCoffee size={20} />
           </span>
           <div className="min-w-0">
             <p className="truncate font-display text-[15px] font-semibold">{p.produto}</p>
@@ -152,7 +153,23 @@ function Ficha({ produto: p }: { produto: ProdutoCafe }) {
           {p.grupo && <Badge variant="secondary">{p.grupo}</Badge>}
           <Carencia dias={p.carencia} />
         </div>
+
+        <AcoesFichaProduto
+          dados={{
+            titulo: p.produto,
+            cultura: "Café",
+            ingrediente: p.ingrediente,
+            fornecedor: p.fornecedor,
+            grupo: p.grupo,
+            dosagens: p.dosagens,
+            unidadeFormacao: p.unidadeFormacao,
+            funcao: p.funcao,
+            instrucoes: p.instrucoes,
+            carencia: p.carencia,
+          }}
+        />
       </AccordionContent>
     </AccordionItem>
   );
 }
+

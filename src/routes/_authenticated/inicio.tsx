@@ -1,31 +1,31 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  CalendarRange,
-  Coffee,
-  ShieldCheck,
-  Sprout,
-  TestTube2,
-  TriangleAlert,
-} from "lucide-react";
+import { ArrowRight, ShieldCheck, TriangleAlert } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { programa, totais, unicos } from "@/data/programa";
 import { useAuth } from "@/lib/auth";
 import { APP } from "@/lib/app-config";
+import {
+  FlaticonCoffee,
+  FlaticonCornSoy,
+  FlaticonFoliar,
+  FlaticonCalendar,
+  FlaticonCalculator,
+  FlaticonTankMix,
+} from "@/components/flaticon-icons";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
     meta: [
-      { title: "Início | AgroBase" },
+      { title: "Início | Guia Agronômico Cooxupé" },
       {
         name: "description",
         content:
-          "Painel inicial da base de conhecimento: catálogos de Café, Milho e Soja, linha foliar e calendário de manejo do Programa de Uso 2026.",
+          "Painel inicial da base de conhecimento: catálogos de Café, Milho e Soja, linha foliar, calculadora de dosagem e calendário de manejo do Guia Agronômico Cooxupé.",
       },
-      { property: "og:title", content: "Início | AgroBase" },
+      { property: "og:title", content: "Início | Guia Agronômico Cooxupé" },
       {
         property: "og:description",
-        content: "Painel inicial da base de conhecimento técnico do Programa de Uso 2026.",
+        content: "Painel inicial da base de conhecimento técnico Cooxupé.",
       },
     ],
   }),
@@ -35,27 +35,39 @@ export const Route = createFileRoute("/_authenticated/inicio")({
 const ATALHOS = [
   {
     to: "/cafe",
-    icon: Coffee,
+    icon: FlaticonCoffee,
     titulo: "Café",
     texto: "Dosagens por estágio: viveiro, plantio, formação, produção e esqueletamento.",
   },
   {
     to: "/milho-soja",
-    icon: Sprout,
+    icon: FlaticonCornSoy,
     titulo: "Milho e Soja",
     texto: "Defensivos, fertilizantes e bioestimulantes com dosagem e instruções de uso.",
   },
   {
     to: "/foliar",
-    icon: TestTube2,
+    icon: FlaticonFoliar,
     titulo: "Linha Foliar",
     texto: "Itens da linha por classe nutricional e recomendações por deficiência.",
   },
   {
     to: "/calendario",
-    icon: CalendarRange,
+    icon: FlaticonCalendar,
     titulo: "Calendário de Manejo",
     texto: "Janelas fenológicas do café adulto e em formação, com produtos por categoria.",
+  },
+  {
+    to: "/calculadora",
+    icon: FlaticonCalculator,
+    titulo: "Calculadora de Dosagem",
+    texto: "Cálculo instantâneo de produto comercial, calda total e reabastecimentos.",
+  },
+  {
+    to: "/mistura-calda",
+    icon: FlaticonTankMix,
+    titulo: "Mistura de Calda",
+    texto: "Guia passo a passo da ordem de adição de produtos e prevenção de coalhadas.",
   },
 ] as const;
 
@@ -81,57 +93,72 @@ function Inicio() {
   return (
     <AppShell
       titulo={nome ? `Olá, ${nome}` : "Início"}
-      descricao={`${APP.nomeCompleto} · Programa de Uso ${APP.ano}`}
+      descricao={APP.nomeCompleto}
     >
       <div className="mx-auto max-w-6xl space-y-8">
-        <section className="panel relative overflow-hidden p-7 sm:p-9">
-          <div className="field-grid absolute inset-0 opacity-60" />
-          <div className="relative max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
-              <ShieldCheck className="size-3.5" /> Conteúdo oficial · {APP.equipe}
-            </span>
-            <h2 className="mt-4 font-display text-2xl font-bold sm:text-3xl">
-              Programa de Uso {APP.ano}
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Consulte produtos por cultura, ingrediente ativo, fornecedor ou grupo. Cada ficha traz
-              dosagem por estágio, instruções de aplicação, função e intervalo de segurança.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Link
-                to="/cafe"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                Abrir catálogo de Café <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                to="/calendario"
-                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent"
-              >
-                Ver calendário de manejo
-              </Link>
+        {/* Banner Principal no Verde Original com Dourado Elegante e Nova Logo */}
+        <section className="panel relative overflow-hidden bg-primary p-7 sm:p-9 text-primary-foreground">
+          <div className="field-grid absolute inset-0 opacity-30" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="max-w-xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 border border-primary-foreground/25 px-3 py-1 text-xs font-semibold text-primary-foreground/90">
+                <ShieldCheck className="size-3.5" /> Conteúdo oficial · {APP.equipe}
+              </span>
+              <h2 className="mt-4 font-display text-2xl font-bold sm:text-3xl text-primary-foreground">
+                Programa de Manejo Agronômico
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-primary-foreground/80">
+                Consulte produtos por cultura, ingrediente ativo, fornecedor ou grupo. Cada ficha traz
+                dosagem por estágio, instruções de aplicação, função e intervalo de segurança.
+              </p>
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Link
+                  to="/cafe"
+                  className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-white/90 shadow-sm"
+                >
+                  Abrir catálogo de Café <ArrowRight className="size-4" />
+                </Link>
+                <Link
+                  to="/calculadora"
+                  className="inline-flex items-center gap-2 rounded-lg border border-primary-foreground/30 bg-primary-foreground/10 px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-foreground/20"
+                >
+                  Calculadora de Dosagem
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid size-28 sm:size-36 place-items-center rounded-2xl bg-white/10 p-3 backdrop-blur-md border border-primary-foreground/20 shadow-lg shrink-0">
+              <img
+                src="/logo.png"
+                alt="Guia Agronômico Cooxupé"
+                className="size-full object-contain"
+              />
             </div>
           </div>
         </section>
 
+
+        {/* Métricas com Destaque Dourado Elegante (#c59b27 / text-amber-500) */}
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {metricas.map((m) => (
-            <div key={m.rotulo} className="panel p-4">
-              <p className="font-display text-2xl font-bold text-primary">{m.valor}</p>
-              <p className="mt-1 text-xs leading-snug text-muted-foreground">{m.rotulo}</p>
+            <div key={m.rotulo} className="panel p-4 hover:border-amber-500/30 transition-colors">
+              <p className="font-display text-3xl font-bold text-[#c59b27] dark:text-amber-400">{m.valor}</p>
+              <p className="mt-1 text-xs leading-snug text-muted-foreground font-medium">{m.rotulo}</p>
             </div>
           ))}
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2">
+        {/* Atalhos Rápidos */}
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ATALHOS.map((a) => (
-            <Link key={a.to} to={a.to} className="panel group p-5 transition-shadow hover:shadow-lifted">
-              <span className="grid size-10 place-items-center rounded-xl bg-secondary text-secondary-foreground">
-                <a.icon className="size-5" />
+            <Link key={a.to} to={a.to} className="panel group p-5 transition-all hover:shadow-lifted hover:border-amber-500/30">
+              <span className="grid size-10 place-items-center rounded-xl bg-secondary text-secondary-foreground group-hover:bg-amber-500/10 group-hover:text-[#c59b27] transition-colors">
+                <a.icon size={22} />
               </span>
               <h3 className="mt-4 flex items-center gap-2 font-display text-base font-semibold">
                 {a.titulo}
-                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 text-[#c59b27]" />
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{a.texto}</p>
             </Link>
@@ -148,8 +175,11 @@ function Inicio() {
         </section>
 
         {isAdmin && (
-          <section className="panel p-5">
-            <h3 className="font-display text-base font-semibold">Administração</h3>
+          <section className="panel p-5 border-amber-500/20">
+            <h3 className="font-display text-base font-semibold flex items-center gap-2">
+              <span className="inline-block size-2 rounded-full bg-[#c59b27]" />
+              Administração
+            </h3>
             <p className="mt-1.5 text-sm text-muted-foreground">
               Convide novos integrantes por e-mail e defina o nível de acesso de cada um.
             </p>
@@ -157,7 +187,7 @@ function Inicio() {
               to="/usuarios"
               className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent"
             >
-              Gerenciar usuários <ArrowRight className="size-4" />
+              Gerenciar usuários <ArrowRight className="size-4 text-[#c59b27]" />
             </Link>
           </section>
         )}

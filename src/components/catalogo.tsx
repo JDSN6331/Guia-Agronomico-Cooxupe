@@ -10,6 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  compartilharWhatsApp,
+  copiarRecomendacao,
+  imprimirFichaProduto,
+  type DadosFichaProduto,
+} from "@/lib/share-utils";
+
 
 export type Filtro = {
   id: string;
@@ -146,3 +153,36 @@ export function VazioResultado() {
     </div>
   );
 }
+
+export function AcoesFichaProduto({ dados }: { dados: DadosFichaProduto }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border/80 mt-4">
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20"
+        onClick={() => compartilharWhatsApp(dados)}
+      >
+        <span className="mr-1">💬</span> WhatsApp
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 text-xs font-medium"
+        onClick={() => copiarRecomendacao(dados)}
+      >
+        Copiar Ficha
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 text-xs text-muted-foreground hover:text-foreground"
+        onClick={() => imprimirFichaProduto(dados)}
+      >
+        📄 Gerar PDF
+      </Button>
+    </div>
+  );
+}
+
+

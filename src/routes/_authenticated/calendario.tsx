@@ -19,8 +19,9 @@ export const Route = createFileRoute("/_authenticated/calendario")({
       { property: "og:title", content: "Calendário de Manejo | AgroBase" },
       {
         property: "og:description",
-        content: "Janelas de manejo do café e produtos por categoria — Programa de Uso 2026.",
+        content: "Janelas de manejo do café e produtos por categoria — Programa de Manejo Técnico.",
       },
+
     ],
   }),
   component: PaginaCalendario,
