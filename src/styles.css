@@ -63,54 +63,55 @@
 :root {
   --radius: 0.75rem;
 
-  --background: oklch(0.985 0.006 120);
-  --foreground: oklch(0.24 0.028 152);
+  --background: oklch(0.988 0.004 106);
+  --foreground: oklch(0.23 0.022 158);
 
-  --surface: oklch(0.965 0.01 120);
+  --surface: oklch(0.972 0.007 118);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.028 152);
+  --card-foreground: oklch(0.23 0.022 158);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.24 0.028 152);
+  --popover-foreground: oklch(0.23 0.022 158);
 
-  /* Verde Campo Orgânico Original */
-  --primary: oklch(0.48 0.093 150);
-  --primary-foreground: oklch(0.985 0.008 120);
+  /* Verde Campo — mais profundo e menos amarelado */
+  --primary: oklch(0.44 0.082 157);
+  --primary-foreground: oklch(0.985 0.006 110);
 
-  --secondary: oklch(0.945 0.016 130);
-  --secondary-foreground: oklch(0.31 0.05 150);
+  --secondary: oklch(0.952 0.012 140);
+  --secondary-foreground: oklch(0.32 0.045 155);
 
-  --muted: oklch(0.955 0.011 125);
-  --muted-foreground: oklch(0.5 0.022 148);
+  --muted: oklch(0.962 0.008 132);
+  --muted-foreground: oklch(0.5 0.018 152);
 
-  --accent: oklch(0.93 0.035 135);
-  --accent-foreground: oklch(0.31 0.055 150);
+  --accent: oklch(0.938 0.024 148);
+  --accent-foreground: oklch(0.3 0.048 155);
 
-  --leaf: oklch(0.78 0.125 133);
-  --leaf-foreground: oklch(0.24 0.05 150);
+  --leaf: oklch(0.72 0.11 148);
+  --leaf-foreground: oklch(0.22 0.045 155);
 
-  --terra: oklch(0.63 0.116 58);
+  --terra: oklch(0.62 0.1 55);
   --terra-foreground: oklch(0.99 0.005 90);
 
   /* Dourado Nobre Cooxupé */
-  --gold: oklch(0.72 0.13 82);
-  --gold-foreground: oklch(0.20 0.04 82);
+  --gold: oklch(0.7 0.115 84);
+  --gold-foreground: oklch(0.2 0.04 82);
 
   --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.985 0.003 248);
 
-  --border: oklch(0.9 0.014 130);
-  --input: oklch(0.9 0.014 130);
-  --ring: oklch(0.48 0.093 150);
+  --border: oklch(0.918 0.009 138);
+  --input: oklch(0.918 0.009 138);
+  --ring: oklch(0.44 0.082 157);
 
-  --sidebar: oklch(0.975 0.012 125);
-  --sidebar-foreground: oklch(0.28 0.03 152);
-  --sidebar-primary: oklch(0.48 0.093 150);
-  --sidebar-primary-foreground: oklch(0.985 0.008 120);
-  --sidebar-accent: oklch(0.93 0.03 135);
-  --sidebar-accent-foreground: oklch(0.28 0.05 150);
-  --sidebar-border: oklch(0.9 0.014 130);
-  --sidebar-ring: oklch(0.48 0.093 150);
+  --sidebar: oklch(0.978 0.007 130);
+  --sidebar-foreground: oklch(0.27 0.026 158);
+  --sidebar-primary: oklch(0.44 0.082 157);
+  --sidebar-primary-foreground: oklch(0.985 0.006 110);
+  --sidebar-accent: oklch(0.94 0.022 148);
+  --sidebar-accent-foreground: oklch(0.28 0.045 155);
+  --sidebar-border: oklch(0.918 0.009 138);
+  --sidebar-ring: oklch(0.44 0.082 157);
 }
+
 
 .dark {
   --background: oklch(0.19 0.021 155);
