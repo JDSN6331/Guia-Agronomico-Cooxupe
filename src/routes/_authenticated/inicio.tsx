@@ -96,18 +96,23 @@ function Inicio() {
       descricao={APP.nomeCompleto}
     >
       <div className="mx-auto max-w-6xl space-y-8">
-        {/* Banner Principal no Verde Original com Dourado Elegante e Nova Logo */}
-        <section className="panel relative overflow-hidden bg-primary p-7 sm:p-9 text-primary-foreground">
-          <div className="field-grid absolute inset-0 opacity-30" />
-          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        {/* Banner Principal — verde profundo com acento dourado */}
+        <section className="panel banner-campo relative overflow-hidden border-transparent p-7 sm:p-9 text-primary-foreground">
+          <div className="field-grid absolute inset-0 opacity-20" />
+          <div
+            className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full opacity-40 blur-3xl"
+            style={{ background: "radial-gradient(circle, var(--color-gold), transparent 70%)" }}
+          />
+          <div className="relative flex flex-col justify-between gap-8 sm:flex-row sm:items-center">
             <div className="max-w-xl">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 border border-primary-foreground/25 px-3 py-1 text-xs font-semibold text-primary-foreground/90">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/15 px-3 py-1 text-xs font-semibold text-gold">
                 <ShieldCheck className="size-3.5" /> Conteúdo oficial · {APP.equipe}
               </span>
-              <h2 className="mt-4 font-display text-2xl font-bold sm:text-3xl text-primary-foreground">
+              <h2 className="mt-4 font-display text-2xl font-bold text-primary-foreground sm:text-3xl">
                 Programa de Manejo Agronômico
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-primary-foreground/80">
+              <span className="gold-rule mt-3 block h-px w-28 rounded-full" />
+              <p className="mt-3 text-sm leading-relaxed text-primary-foreground/85">
                 Consulte produtos por cultura, ingrediente ativo, fornecedor ou grupo. Cada ficha traz
                 dosagem por estágio, instruções de aplicação, função e intervalo de segurança.
               </p>
@@ -115,7 +120,7 @@ function Inicio() {
               <div className="mt-6 flex flex-wrap gap-2">
                 <Link
                   to="/cafe"
-                  className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-white/90 shadow-sm"
+                  className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-gold-foreground shadow-sm transition-all hover:brightness-105"
                 >
                   Abrir catálogo de Café <ArrowRight className="size-4" />
                 </Link>
@@ -128,15 +133,14 @@ function Inicio() {
               </div>
             </div>
 
-            <div className="grid size-28 sm:size-36 place-items-center rounded-2xl bg-white/10 p-3 backdrop-blur-md border border-primary-foreground/20 shadow-lg shrink-0">
-              <img
-                src="/logo.png"
-                alt="Guia Agronômico Cooxupé"
-                className="size-full object-contain"
-              />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Guia Agronômico Cooxupé"
+              className="size-28 shrink-0 object-contain drop-shadow-xl sm:size-40"
+            />
           </div>
         </section>
+
 
 
         {/* Métricas com Destaque Dourado Elegante (#c59b27 / text-amber-500) */}
