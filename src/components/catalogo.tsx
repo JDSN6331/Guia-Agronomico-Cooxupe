@@ -44,36 +44,36 @@ export function BarraFiltros({
   const ativos = filtros.filter((f) => f.valor !== "todos").length;
 
   return (
-    <div className="sticky top-0 z-20 rounded-2xl p-3 sm:p-4 transition-all duration-200 backdrop-blur-xl border bg-[#eaf3eb]/95 border-[#b3d4be] text-[#0d2a1b] shadow-md dark:bg-[#071d12]/95 dark:border-[#194b30] dark:text-emerald-50 dark:shadow-xl">
+    <div className="sticky top-0 z-20 rounded-2xl p-3 sm:p-4 transition-all duration-200 backdrop-blur-xl border bg-card/95 border-border/90 text-card-foreground shadow-sm dark:bg-[#071d12]/95 dark:border-[#194b30] dark:text-emerald-50 dark:shadow-xl">
       <div className="flex items-center justify-between gap-2 mb-2 px-1">
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-[#1c5c36]/15 text-[#1c5c36] border border-[#1c5c36]/30 dark:bg-gold/15 dark:text-gold dark:border-gold/25">
+          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-[#1c5c36] text-white shadow-xs dark:bg-gold/15 dark:text-gold dark:border dark:border-gold/25">
             <SlidersHorizontal className="size-3" /> Busca & Filtros
           </span>
-          <p className="text-xs text-[#294e37] dark:text-emerald-100/70 hidden sm:inline font-medium">
+          <p className="text-xs text-muted-foreground dark:text-emerald-100/70 hidden sm:inline font-medium">
             Exibindo <strong className="text-[#1c5c36] dark:text-gold font-bold">{exibidos}</strong> de {total} registros
           </p>
         </div>
-        <p className="text-[11px] text-[#294e37] dark:text-emerald-100/70 sm:hidden">
+        <p className="text-[11px] text-muted-foreground dark:text-emerald-100/70 sm:hidden">
           <strong className="text-[#1c5c36] dark:text-gold font-bold">{exibidos}</strong>/{total}
         </p>
       </div>
 
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#1c5c36] dark:text-gold/70" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground dark:text-gold/70" />
           <Input
             value={termo}
             onChange={(e) => onTermo(e.target.value)}
             placeholder={placeholder}
-            className="pl-9 bg-white border-[#b3d4be] text-[#0d2a1b] placeholder:text-[#527560] focus-visible:ring-[#1c5c36] dark:bg-[#05150d]/90 dark:border-[#194b30]/60 dark:text-white dark:placeholder:text-emerald-200/50 dark:focus-visible:ring-gold h-10 text-xs sm:text-sm rounded-xl shadow-inner"
+            className="pl-9 bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-[#1c5c36] dark:bg-[#05150d]/90 dark:border-[#194b30]/60 dark:text-white dark:placeholder:text-emerald-200/50 dark:focus-visible:ring-gold h-10 text-xs sm:text-sm rounded-xl shadow-inner"
             maxLength={120}
           />
           {termo && (
             <button
               onClick={() => onTermo("")}
               aria-label="Limpar busca"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#294e37] hover:bg-[#1c5c36]/10 dark:text-emerald-200/70 dark:hover:bg-gold/20 dark:hover:text-white"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-accent dark:text-emerald-200/70 dark:hover:bg-gold/20 dark:hover:text-white"
             >
               <X className="size-4" />
             </button>
@@ -83,7 +83,7 @@ export function BarraFiltros({
           <Button
             variant={aberto ? "default" : "outline"}
             onClick={() => setAberto((v) => !v)}
-            className="shrink-0 h-10 rounded-xl bg-white border-[#b3d4be] text-[#1c5c36] hover:bg-[#1c5c36] hover:text-white dark:bg-[#0d2a1b] dark:border-[#194b30] dark:text-gold dark:hover:bg-gold dark:hover:text-[#06140d] font-bold text-xs sm:text-sm transition-all shadow-sm"
+            className="shrink-0 h-10 rounded-xl bg-background border-border text-[#1c5c36] hover:bg-[#1c5c36] hover:text-white dark:bg-[#0d2a1b] dark:border-[#194b30] dark:text-gold dark:hover:bg-gold dark:hover:text-[#06140d] font-bold text-xs sm:text-sm transition-all shadow-xs"
           >
             <SlidersHorizontal className="size-4 sm:mr-2" />
             <span className="hidden sm:inline">Filtros</span>
@@ -97,15 +97,15 @@ export function BarraFiltros({
       </div>
 
       {aberto && filtros.length > 0 && (
-        <div className="mt-3 grid gap-3 border-t border-[#b3d4be]/60 dark:border-[#194b30]/40 pt-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-3 grid gap-3 border-t border-border dark:border-[#194b30]/40 pt-3 sm:grid-cols-2 lg:grid-cols-4">
           {filtros.map((f) => (
             <div key={f.id} className="space-y-1.5">
               <label className="text-[11px] font-bold tracking-wide uppercase text-[#1c5c36] dark:text-gold/80">{f.rotulo}</label>
               <Select value={f.valor} onValueChange={f.onChange}>
-                <SelectTrigger className="w-full bg-white border-[#b3d4be] text-[#0d2a1b] dark:bg-[#05150d]/90 dark:border-[#194b30]/60 dark:text-white h-9 text-xs rounded-lg shadow-sm">
+                <SelectTrigger className="w-full bg-background border-border text-foreground dark:bg-[#05150d]/90 dark:border-[#194b30]/60 dark:text-white h-9 text-xs rounded-lg shadow-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-72 bg-white border-[#b3d4be] text-[#0d2a1b] dark:bg-[#081a11] dark:border-[#194b30] dark:text-white">
+                <SelectContent className="max-h-72 bg-popover border-border text-popover-foreground dark:bg-[#081a11] dark:border-[#194b30] dark:text-white">
                   <SelectItem value="todos">Todos</SelectItem>
                   {f.opcoes.map((o) => (
                     <SelectItem key={o} value={o}>
@@ -128,21 +128,24 @@ export function useFiltro(inicial = "todos") {
 }
 
 export function Campo({ rotulo, children }: { rotulo: string; children: ReactNode }) {
+  const formatado = typeof children === "string" ? children.replace(/\.{2,}/g, " ").trim() : children;
+
   return (
-    <div>
+    <div className="min-w-0">
       <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
         {rotulo}
       </span>
-      <div className="mt-0.5 text-sm font-medium">{children}</div>
+      <div className="mt-0.5 text-sm font-medium break-words [overflow-wrap:anywhere]">{formatado}</div>
     </div>
   );
 }
 
-export function Carencia({ dias }: { dias?: string | number }) {
+export function Carencia({ dias }: { dias?: string | number | undefined }) {
   if (!dias) return null;
-  const texto = String(dias).toLowerCase().includes("dias") ? String(dias) : `${dias} dias`;
+  const textoLimpo = String(dias).replace(/\.{2,}/g, " ").trim();
+  const texto = textoLimpo.toLowerCase().includes("dias") ? textoLimpo : `${textoLimpo} dias`;
   return (
-    <Badge variant="outline" className="border-gold/50 bg-gold/10 text-gold text-xs font-semibold">
+    <Badge variant="outline" className="border-gold/50 bg-gold/10 text-gold text-xs font-semibold max-w-full break-words whitespace-normal text-left">
       Carência: {texto}
     </Badge>
   );
@@ -186,10 +189,16 @@ export function FichaCompleta({
   children?: ReactNode;
 }) {
   return (
-    <div className="space-y-4 pt-2">
-      {p.carencia && <Carencia dias={p.carencia} />}
+    <div className="space-y-4 pt-2 min-w-0">
+      <div className="flex flex-wrap gap-2">
+        {p.grupo && <Badge variant="secondary" className="max-w-full break-words whitespace-normal text-left">{p.grupo}</Badge>}
+        {p.familia && <Badge variant="outline" className="border-blue-500/30 text-blue-400 max-w-full break-words whitespace-normal text-left">{p.familia}</Badge>}
+        {p.cultura && <Badge variant="outline" className="max-w-full break-words whitespace-normal text-left">{p.cultura}</Badge>}
+        {p.carencia && <Carencia dias={p.carencia} />}
+      </div>
 
-      {p.ingrediente && <Campo rotulo="Ingrediente Ativo">{p.ingrediente}</Campo>}
+      {p.cultura && <Campo rotulo="Cultura">{p.cultura}</Campo>}
+      {p.ingrediente && <Campo rotulo="Ingrediente Ativo / Composição">{p.ingrediente}</Campo>}
       {p.fornecedor && <Campo rotulo="Fornecedor">{p.fornecedor}</Campo>}
       {p.grupo && <Campo rotulo="Grupo">{p.grupo}</Campo>}
       {p.familia && <Campo rotulo="Família">{p.familia}</Campo>}
@@ -201,9 +210,9 @@ export function FichaCompleta({
           </span>
           <div className="grid gap-2 text-xs sm:grid-cols-2 pt-1">
             {Object.entries(p.dosagens).map(([estagio, val]) => (
-              <div key={estagio} className="rounded-lg bg-background p-2 border border-border/60">
-                <span className="font-semibold text-foreground">{estagio}:</span>{" "}
-                <span className="font-bold text-gold">{val}</span>
+              <div key={estagio} className="rounded-lg bg-background p-2.5 border border-border/60">
+                <span className="text-muted-foreground block text-[11px]">{estagio}:</span>{" "}
+                <span className="font-bold text-gold text-xs">{val}</span>
               </div>
             ))}
           </div>

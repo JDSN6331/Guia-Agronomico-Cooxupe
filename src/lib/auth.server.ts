@@ -67,10 +67,10 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     `;
 
     if (row) {
-      const roleRows = await sql<{ role: string }[]>`
+      const roleRows = await sql`
         SELECT role::text FROM public.user_roles WHERE user_id = ${row.user_id}::uuid
       `;
-      const papeis = roleRows.map((r) => r.role as "admin" | "tecnico");
+      const papeis = roleRows.map((r: any) => r.role as "admin" | "tecnico");
       if (papeis.length === 0) papeis.push("tecnico");
 
       return {
@@ -423,7 +423,7 @@ export async function solicitarRecuperacaoSenha(email: string, redirectTo: strin
 }
 
 function setCookieHeader(token: string, expiresAt: Date) {
-  const isProd = process.env.NODE_ENV === "production";
+  const isProd = process.env["NODE_ENV"] === "production";
   const cookieValue = `${SESSION_COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; ${
     isProd ? "Secure; " : ""
   }Expires=${expiresAt.toUTCString()}`;

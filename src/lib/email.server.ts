@@ -1,8 +1,9 @@
 async function getTransporter() {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 587);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const env = process.env;
+  const host = env["SMTP_HOST"];
+  const port = Number(env["SMTP_PORT"] || 587);
+  const user = env["SMTP_USER"];
+  const pass = env["SMTP_PASS"];
 
   if (host && user && pass) {
     try {
@@ -30,7 +31,7 @@ export async function enviarEmailConvite(input: {
   link: string;
 }): Promise<boolean> {
   const transporter = await getTransporter();
-  const from = process.env.SMTP_FROM || "Guia Agronômico Cooxupé <nao-responder@cooxupe.com.br>";
+  const from = process.env["SMTP_FROM"] || "Guia Agronômico Cooxupé <nao-responder@cooxupe.com.br>";
   const subject = "Convite de acesso | Guia Agronômico Cooxupé";
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #12281b; background-color: #f9fbf9; border-radius: 12px; border: 1px solid #e1e9e3;">
@@ -75,7 +76,7 @@ export async function enviarEmailRecuperacao(input: {
   link: string;
 }): Promise<boolean> {
   const transporter = await getTransporter();
-  const from = process.env.SMTP_FROM || "Guia Agronômico Cooxupé <nao-responder@cooxupe.com.br>";
+  const from = process.env["SMTP_FROM"] || "Guia Agronômico Cooxupé <nao-responder@cooxupe.com.br>";
   const subject = "Recuperação de Acesso | Guia Agronômico Cooxupé";
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #12281b; background-color: #f9fbf9; border-radius: 12px; border: 1px solid #e1e9e3;">

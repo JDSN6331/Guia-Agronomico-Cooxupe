@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Camera, LayoutDashboard, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Trash2, Upload, X } from "lucide-react";
+import { Camera, Layers, LayoutDashboard, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -40,6 +40,7 @@ const NAV = [
   { to: "/inicio", label: "Início", icon: LayoutDashboard },
   { to: "/cafe", label: "Café", icon: FlaticonCoffee },
   { to: "/milho-soja", label: "Milho e Soja", icon: FlaticonCornSoy },
+  { to: "/familia-produtos", label: "Família de Produtos", icon: Layers },
   { to: "/calendario", label: "Calendário de Manejo", icon: FlaticonCalendar },
   { to: "/calculadora", label: "Calculadora de Dosagem", icon: FlaticonCalculator },
   { to: "/mistura-calda", label: "Mistura de Calda", icon: FlaticonTankMix },

@@ -5,16 +5,17 @@ import Database from "better-sqlite3";
 import postgres from "postgres";
 
 // Determinar se estamos em modo produção (PostgreSQL) ou modo local de desenvolvimento (SQLite)
+const env = process.env;
 const isProd =
-  process.env.NODE_ENV === "production" ||
-  Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("postgres"));
+  env["NODE_ENV"] === "production" ||
+  Boolean(env["DATABASE_URL"] && env["DATABASE_URL"].startsWith("postgres"));
 
 let postgresClient: any = null;
 let sqliteDb: any = null;
 
 if (isProd) {
   const DATABASE_URL =
-    process.env.DATABASE_URL ||
+    env["DATABASE_URL"] ||
     "postgres://postgres:postgres@localhost:5432/knowledge_agri_hub";
   postgresClient = postgres(DATABASE_URL, {
     max: 10,

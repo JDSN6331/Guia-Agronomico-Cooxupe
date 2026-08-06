@@ -29,7 +29,7 @@ function Gate() {
     );
   }
 
-  if (papeis.length === 0) {
+  if (!Array.isArray(papeis) || papeis.length === 0) {
     return <SemAcesso onAtualizar={recarregarSessao} onSair={sair} />;
   }
 

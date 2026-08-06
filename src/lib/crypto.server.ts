@@ -19,6 +19,7 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   const parts = storedHash.split(":");
   if (parts.length !== 2) return false;
   const [salt, key] = parts;
+  if (!salt || !key) return false;
   const keyBuffer = Buffer.from(key, "hex");
   const derivedKey = (await scryptAsync(password, salt, 64)) as Buffer;
   return timingSafeEqual(keyBuffer, derivedKey);

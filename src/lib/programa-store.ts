@@ -127,11 +127,21 @@ export function obterHistoricoVersoes(): VersaoPlanilha[] {
       if (salvo) {
         const list = JSON.parse(salvo);
         if (Array.isArray(list) && list.length > 0) {
-          return list as VersaoPlanilha[];
+          const validos = list.filter(
+            (item) => item && typeof item === "object" && typeof item.nomeArquivo === "string",
+          );
+          if (validos.length > 0) {
+            return validos as VersaoPlanilha[];
+          }
         }
       }
     } catch (e) {
       console.warn("[Programa Store] Erro ao ler histórico:", e);
+      try {
+        localStorage.removeItem(HISTORICO_KEY);
+      } catch {
+        // ignora
+      }
     }
   }
   return [VERSAO_OFICIAL_PADRAO];
@@ -141,6 +151,7 @@ export function restaurarProgramaPadrao() {
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(HISTORICO_KEY);
     } catch {
       // ignora
     }

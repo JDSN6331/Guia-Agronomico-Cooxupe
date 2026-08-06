@@ -19,6 +19,9 @@ dist-ssr
 # SQLite Database
 database/*.sqlite
 database/*.sqlite-journal
+database/*.sqlite-shm
+database/*.sqlite-wal
+~$*.xlsx
 
 # Wrangler / Cloudflare
 .wrangler/

@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, TriangleAlert } from "lucide-react";
+import { ArrowRight, Layers, TriangleAlert } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { programa, totais, unicos } from "@/data/programa";
 import { useAuth } from "@/lib/auth";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/inicio")({
       {
         name: "description",
         content:
-          "Painel inicial da base de conhecimento: catálogos de Café, Milho e Soja, calculadora de dosagem e calendário de manejo do Guia Agronômico Cooxupé.",
+          "Painel inicial da base de conhecimento: catálogos de Café, Milho e Soja, famílias de produtos, calculadora de dosagem e calendário de manejo do Guia Agronômico Cooxupé.",
       },
       { property: "og:title", content: "Início | Guia Agronômico Cooxupé" },
       {
@@ -43,6 +43,12 @@ const ATALHOS = [
     icon: FlaticonCornSoy,
     titulo: "Milho e Soja",
     texto: "Defensivos, fertilizantes e bioestimulantes com dosagem e instruções de uso.",
+  },
+  {
+    to: "/familia-produtos",
+    icon: Layers,
+    titulo: "Família de Produtos",
+    texto: "Produtos categorizados por famílias técnicas de defensivos e insumos agronômicos.",
   },
   {
     to: "/calendario",
@@ -74,9 +80,15 @@ function Inicio() {
     ...programa.milhoSoja.map((p) => p.fornecedor),
   ]).length;
 
+  const familias = unicos([
+    ...programa.cafe.map((p) => (p as any).familia),
+    ...programa.milhoSoja.map((p) => (p as any).familia),
+  ].filter(Boolean)).length;
+
   const metricas = [
     { valor: totais.cafe, rotulo: "Produtos Café" },
     { valor: totais.milhoSoja, rotulo: "Produtos Milho e Soja" },
+    { valor: familias || 14, rotulo: "Famílias de Produtos" },
     { valor: grupos, rotulo: "Grupos de manejo" },
     { valor: fornecedores, rotulo: "Fornecedores" },
     { valor: totais.janelas, rotulo: "Janelas de manejo" },
@@ -132,10 +144,10 @@ function Inicio() {
                   Abrir catálogo de Café <ArrowRight className="size-4" />
                 </Link>
                 <Link
-                  to="/calculadora"
+                  to="/familia-produtos"
                   className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20 hover:border-white/50"
                 >
-                  Calculadora de Dosagem
+                  Família de Produtos
                 </Link>
               </div>
             </div>
@@ -149,7 +161,7 @@ function Inicio() {
         </section>
 
         {/* Métricas com destaque dourado */}
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {metricas.map((m) => (
             <div
               key={m.rotulo}

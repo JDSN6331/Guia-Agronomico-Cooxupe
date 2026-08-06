@@ -44,6 +44,7 @@ export function MobileNav() {
   ] as const;
 
   const maisItens = [
+    { to: "/familia-produtos", label: "Família de Produtos", desc: "Famílias de insumos e defensivos", icon: FlaticonFoliar },
     { to: "/calendario", label: "Calendário de Manejo", desc: "Janelas fenológicas e produtos", icon: FlaticonCalendar },
     { to: "/calculadora", label: "Calculadora de Dosagem", desc: "Cálculo de calda e dosagens", icon: FlaticonCalculator },
     { to: "/mistura-calda", label: "Mistura de Calda", desc: "Ordem de adição e prevenção", icon: FlaticonTankMix },

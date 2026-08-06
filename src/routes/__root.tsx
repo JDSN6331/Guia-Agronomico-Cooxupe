@@ -151,22 +151,6 @@ function RootComponent() {
                 fontSize: "14px",
                 fontWeight: 600,
               },
-              error: {
-                style: {
-                  background: "#991b1b",
-                  color: "#ffffff",
-                  border: "1px solid #f87171",
-                  fontWeight: 600,
-                },
-              },
-              success: {
-                style: {
-                  background: "#065f46",
-                  color: "#ffffff",
-                  border: "1px solid #34d399",
-                  fontWeight: 600,
-                },
-              },
             }}
           />
         </AuthProvider>

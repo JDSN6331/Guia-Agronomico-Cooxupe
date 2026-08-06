@@ -17,7 +17,7 @@ export type UsuarioAdmin = {
 export async function assertAdmin(userId: string) {
   if (!userId) throw new Error("Usuário não autenticado.");
   try {
-    const [row] = await sql<{ count: string }[]>`
+    const [row] = await sql`
       SELECT count(*)::text as count
       FROM public.user_roles
       WHERE user_id = ${userId}::uuid AND role = 'admin'::public.user_role
@@ -32,7 +32,7 @@ export async function assertAdmin(userId: string) {
 
 export async function contarPapeis(): Promise<number> {
   try {
-    const [row] = await sql<{ count: string }[]>`
+    const [row] = await sql`
       SELECT count(*)::text as count FROM public.user_roles
     `;
     return Number(row?.count ?? 0);
