@@ -1,0 +1,19 @@
+{
+  "short_name": "Guia Agronômico",
+  "name": "Guia Agronômico — Cooxupé",
+  "description": "Base de Conhecimento Técnica do Desenvolvimento Técnico Cooxupé. Consulte produtos, dosagens e calendário de manejo mesmo sem conexão de internet.",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/inicio",
+  "background_color": "#12251a",
+  "theme_color": "#235839",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "pt-BR",
+  "categories": ["business", "productivity", "utilities"]
+}
