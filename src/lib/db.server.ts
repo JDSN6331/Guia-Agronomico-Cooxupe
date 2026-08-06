@@ -22,6 +22,26 @@ if (isProd) {
     idle_timeout: 20,
     connect_timeout: 10,
   });
+
+  // Executar auto-inicialização das tabelas PostgreSQL em produção na startup
+  try {
+    const initSqlPath = path.join(process.cwd(), "database", "init", "001_postgres_base.sql");
+    const seedSqlPath = path.join(process.cwd(), "database", "init", "002_dev_seed.sql");
+
+    if (fs.existsSync(initSqlPath)) {
+      const initSql = fs.readFileSync(initSqlPath, "utf-8");
+      postgresClient.unsafe(initSql).then(() => {
+        if (fs.existsSync(seedSqlPath)) {
+          const seedSql = fs.readFileSync(seedSqlPath, "utf-8");
+          return postgresClient.unsafe(seedSql);
+        }
+      }).catch((err: any) => {
+        console.error("[PostgreSQL Auto-Init Error]:", err?.message || err);
+      });
+    }
+  } catch (e: any) {
+    console.error("[PostgreSQL Setup Error]:", e?.message || e);
+  }
 } else {
   // Inicialização do SQLite para desenvolvimento local
   const dbDir = path.resolve(process.cwd(), "database");
