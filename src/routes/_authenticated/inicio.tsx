@@ -188,9 +188,9 @@ function Inicio() {
         </section>
 
         {isAdmin && (
-          <section className="panel p-5 border-amber-500/20">
+          <section className="panel border-gold/25 p-5">
             <h3 className="font-display text-base font-semibold flex items-center gap-2">
-              <span className="inline-block size-2 rounded-full bg-[#c59b27]" />
+              <span className="inline-block size-2 rounded-full bg-gold" />
               Administração
             </h3>
             <p className="mt-1.5 text-sm text-muted-foreground">
@@ -200,7 +200,7 @@ function Inicio() {
               to="/usuarios"
               className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent"
             >
-              Gerenciar usuários <ArrowRight className="size-4 text-[#c59b27]" />
+              Gerenciar usuários <ArrowRight className="size-4 text-gold" />
             </Link>
           </section>
         )}
