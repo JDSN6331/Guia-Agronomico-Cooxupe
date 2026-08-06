@@ -82,9 +82,9 @@ export function AppShell({
             to={item.to}
             onClick={() => setMenuAberto(false)}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               ativo
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft font-semibold"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft font-semibold before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-gold"
                 : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             )}
           >
