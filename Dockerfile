@@ -1,10 +1,10 @@
 # Dockerfile para implantação no Easypanel / Hostinger KVM2 VPS
-FROM node:22-alpine AS builder
+FROM node:22-slim AS builder
 
 WORKDIR /app
 
-# Instalar pacotes de compilação C++ para módulos nativos (better-sqlite3 / node-gyp)
-RUN apk add --no-cache python3 make g++
+# Instalar ferramentas de compilação para módulos nativos (better-sqlite3)
+RUN apt-get update && apt-get install -y python3 make g++ gcc && rm -rf /var/lib/apt/lists/*
 
 # Copiar arquivos de dependências
 COPY package.json package-lock.json ./
@@ -19,13 +19,10 @@ COPY . .
 ENV NODE_ENV=production
 RUN npm run build
 
-# Stage 2: Imagem final de execução
-FROM node:22-alpine AS runner
+# Stage 2: Imagem final de execução (Debian Slim com glibc nativo)
+FROM node:22-slim AS runner
 
 WORKDIR /app
-
-# Instalar biblioteca de runtime libstdc++ para rodar modulos C++ (better-sqlite3) em Alpine Linux
-RUN apk add --no-cache libstdc++
 
 ENV NODE_ENV=production
 ENV PORT=3000
