@@ -107,7 +107,7 @@ export function AppShell({
           </div>
           <Separator className="mb-4" />
           {navLinks}
-          <div className="mt-auto rounded-xl bg-sidebar-accent/60 p-3 text-xs leading-relaxed text-sidebar-accent-foreground">
+          <div className="mt-auto rounded-xl border border-gold/25 bg-sidebar-accent/60 p-3 text-xs leading-relaxed text-sidebar-accent-foreground">
             <p className="font-semibold text-gold">Base de Conhecimento Técnico</p>
             <p className="mt-1 opacity-80">
               Consulte sempre a bula e o intervalo de segurança antes da aplicação.
