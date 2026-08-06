@@ -42,10 +42,12 @@ const ESTAGIOS = [
 function PaginaCafe() {
   const [termo, setTermo] = useState("");
   const [grupo, setGrupo] = useState("todos");
+  const [familia, setFamilia] = useState("todos");
   const [fornecedor, setFornecedor] = useState("todos");
   const [estagio, setEstagio] = useState("todos");
 
   const grupos = useMemo(() => unicos(programa.cafe.map((p) => p.grupo)), []);
+  const familias = useMemo(() => unicos(programa.cafe.map((p) => p.familia)), []);
   const fornecedores = useMemo(() => unicos(programa.cafe.map((p) => p.fornecedor)), []);
 
   const lista = useMemo(
@@ -53,11 +55,12 @@ function PaginaCafe() {
       programa.cafe.filter(
         (p) =>
           (grupo === "todos" || p.grupo === grupo) &&
+          (familia === "todos" || p.familia === familia) &&
           (fornecedor === "todos" || p.fornecedor === fornecedor) &&
           (estagio === "todos" || Boolean(p.dosagens[estagio])) &&
-          buscaEm(termo, [p.produto, p.ingrediente, p.fornecedor, p.grupo, p.funcao]),
+          buscaEm(termo, [p.produto, p.ingrediente, p.fornecedor, p.grupo, p.familia, p.funcao]),
       ),
-    [termo, grupo, fornecedor, estagio],
+    [termo, grupo, familia, fornecedor, estagio],
   );
 
   return (
@@ -69,11 +72,12 @@ function PaginaCafe() {
         <BarraFiltros
           termo={termo}
           onTermo={setTermo}
-          placeholder="Buscar por produto, ingrediente ativo, fornecedor ou função…"
+          placeholder="Buscar por produto, ingrediente ativo, fornecedor ou função (alvo)..."
           total={programa.cafe.length}
           exibidos={lista.length}
           filtros={[
             { id: "grupo", rotulo: "Grupo", opcoes: grupos, valor: grupo, onChange: setGrupo },
+            { id: "familia", rotulo: "Família", opcoes: familias, valor: familia, onChange: setFamilia },
             {
               id: "fornecedor",
               rotulo: "Fornecedor",
@@ -92,7 +96,7 @@ function PaginaCafe() {
         />
 
         {lista.length === 0 ? (
-          <VazioResultado />
+          <VazioResultado onLimpar={() => { setTermo(""); setGrupo("todos"); setFamilia("todos"); setFornecedor("todos"); setEstagio("todos"); }} />
         ) : (
           <Accordion type="multiple" className="space-y-3">
             {lista.map((p) => (
@@ -118,13 +122,14 @@ function Ficha({ produto: p }: { produto: ProdutoCafe }) {
           <div className="min-w-0">
             <p className="truncate font-display text-[15px] font-semibold">{p.produto}</p>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {[p.grupo, p.fornecedor].filter(Boolean).join(" · ")}
+              {[p.grupo, p.familia, p.fornecedor].filter(Boolean).join(" · ")}
             </p>
           </div>
         </div>
       </AccordionTrigger>
       <AccordionContent className="space-y-5 pb-5">
         {p.ingrediente && <Campo rotulo="Ingrediente ativo">{p.ingrediente}</Campo>}
+        {p.familia && <Campo rotulo="Família">{p.familia}</Campo>}
 
         {dosagens.length > 0 && (
           <div>
@@ -135,9 +140,8 @@ function Ficha({ produto: p }: { produto: ProdutoCafe }) {
               {dosagens.map((e) => (
                 <div key={e} className="rounded-lg border border-border bg-muted/40 px-3 py-2">
                   <p className="text-xs text-muted-foreground">{e}</p>
-                  <p className="font-display text-sm font-semibold">
+                  <p className="font-display text-sm font-semibold text-gold">
                     {p.dosagens[e]}
-                    {p.unidadeFormacao ? ` ${p.unidadeFormacao}` : ""}
                   </p>
                 </div>
               ))}
@@ -150,18 +154,19 @@ function Ficha({ produto: p }: { produto: ProdutoCafe }) {
 
         <div className="flex flex-wrap gap-2">
           {p.grupo && <Badge variant="secondary">{p.grupo}</Badge>}
+          {p.familia && <Badge variant="outline" className="border-blue-500/30 text-blue-400">{p.familia}</Badge>}
           <Carencia dias={p.carencia} />
         </div>
 
         <AcoesFichaProduto
-          dados={{
+          p={{
             titulo: p.produto,
             cultura: "Café",
             ingrediente: p.ingrediente,
             fornecedor: p.fornecedor,
             grupo: p.grupo,
+            familia: p.familia,
             dosagens: p.dosagens,
-            unidadeFormacao: p.unidadeFormacao,
             funcao: p.funcao,
             instrucoes: p.instrucoes,
             carencia: p.carencia,
@@ -171,4 +176,3 @@ function Ficha({ produto: p }: { produto: ProdutoCafe }) {
     </AccordionItem>
   );
 }
-

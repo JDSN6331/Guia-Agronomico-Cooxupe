@@ -41,7 +41,6 @@ export function MobileNav() {
     { to: "/inicio", label: "Início", icon: LayoutDashboard },
     { to: "/cafe", label: "Café", icon: FlaticonCoffee },
     { to: "/milho-soja", label: "Milho/Soja", icon: FlaticonCornSoy },
-    { to: "/foliar", label: "Foliar", icon: FlaticonFoliar },
   ] as const;
 
   const maisItens = [

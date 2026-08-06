@@ -7,7 +7,6 @@ import { APP } from "@/lib/app-config";
 import {
   FlaticonCoffee,
   FlaticonCornSoy,
-  FlaticonFoliar,
   FlaticonCalendar,
   FlaticonCalculator,
   FlaticonTankMix,
@@ -20,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/inicio")({
       {
         name: "description",
         content:
-          "Painel inicial da base de conhecimento: catálogos de Café, Milho e Soja, linha foliar, calculadora de dosagem e calendário de manejo do Guia Agronômico Cooxupé.",
+          "Painel inicial da base de conhecimento: catálogos de Café, Milho e Soja, calculadora de dosagem e calendário de manejo do Guia Agronômico Cooxupé.",
       },
       { property: "og:title", content: "Início | Guia Agronômico Cooxupé" },
       {
@@ -44,12 +43,6 @@ const ATALHOS = [
     icon: FlaticonCornSoy,
     titulo: "Milho e Soja",
     texto: "Defensivos, fertilizantes e bioestimulantes com dosagem e instruções de uso.",
-  },
-  {
-    to: "/foliar",
-    icon: FlaticonFoliar,
-    titulo: "Linha Foliar",
-    texto: "Itens da linha por classe nutricional e recomendações por deficiência.",
   },
   {
     to: "/calendario",
@@ -84,7 +77,6 @@ function Inicio() {
   const metricas = [
     { valor: totais.cafe, rotulo: "Produtos Café" },
     { valor: totais.milhoSoja, rotulo: "Produtos Milho e Soja" },
-    { valor: totais.foliar, rotulo: "Itens linha foliar" },
     { valor: grupos, rotulo: "Grupos de manejo" },
     { valor: fornecedores, rotulo: "Fornecedores" },
     { valor: totais.janelas, rotulo: "Janelas de manejo" },
@@ -157,7 +149,7 @@ function Inicio() {
         </section>
 
         {/* Métricas com destaque dourado */}
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {metricas.map((m) => (
             <div
               key={m.rotulo}
@@ -203,16 +195,16 @@ function Inicio() {
           <section className="panel border-gold/25 p-5">
             <h3 className="font-display text-base font-semibold flex items-center gap-2">
               <span className="inline-block size-2 rounded-full bg-gold" />
-              Administração
+              Gestão do Sistema
             </h3>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Convide novos integrantes por e-mail e defina o nível de acesso de cada um.
+              Convide novos integrantes, gerencie usuários e faça atualizações ou exportação da base de dados.
             </p>
             <Link
               to="/usuarios"
               className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent"
             >
-              Gerenciar usuários <ArrowRight className="size-4 text-gold" />
+              Acessar Gestão do Sistema <ArrowRight className="size-4 text-gold" />
             </Link>
           </section>
         )}

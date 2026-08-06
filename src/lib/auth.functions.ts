@@ -21,11 +21,12 @@ export const entrarFn = createServerFn({ method: "POST" })
       .object({
         email: z.string().trim().email("E-mail inválido").max(255),
         senha: z.string().min(1, "Informe a senha").max(72),
+        manterConectado: z.boolean().optional(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    return await entrarComEmailESenha(data.email, data.senha);
+    return await entrarComEmailESenha(data.email, data.senha, Boolean(data.manterConectado));
   });
 
 export const sairFn = createServerFn({ method: "POST" }).handler(async () => {

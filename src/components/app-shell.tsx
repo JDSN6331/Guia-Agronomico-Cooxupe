@@ -40,7 +40,6 @@ const NAV = [
   { to: "/inicio", label: "Início", icon: LayoutDashboard },
   { to: "/cafe", label: "Café", icon: FlaticonCoffee },
   { to: "/milho-soja", label: "Milho e Soja", icon: FlaticonCornSoy },
-  { to: "/foliar", label: "Linha Foliar", icon: FlaticonFoliar },
   { to: "/calendario", label: "Calendário de Manejo", icon: FlaticonCalendar },
   { to: "/calculadora", label: "Calculadora de Dosagem", icon: FlaticonCalculator },
   { to: "/mistura-calda", label: "Mistura de Calda", icon: FlaticonTankMix },

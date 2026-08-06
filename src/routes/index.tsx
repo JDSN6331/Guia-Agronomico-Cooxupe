@@ -41,6 +41,7 @@ function Login() {
   const { tema, alternar } = useTema();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [manterConectado, setManterConectado] = useState(true);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [modo, setModo] = useState<"login" | "recuperar">("login");
@@ -58,7 +59,7 @@ function Login() {
     }
     setEnviando(true);
     try {
-      await entrarFn({ data: { email: parsed.data.email, senha: parsed.data.senha } });
+      await entrarFn({ data: { email: parsed.data.email, senha: parsed.data.senha, manterConectado } });
       await recarregarSessao();
       toast.success("Bem-vindo ao Guia Agronômico!");
       await navigate({ to: "/inicio", replace: true });
@@ -294,6 +295,20 @@ function Login() {
                     {mostrarSenha ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
+              </div>
+            )}
+
+            {modo === "login" && (
+              <div className="flex items-center justify-between pt-1">
+                <label className="flex items-center gap-2 text-xs font-medium cursor-pointer" style={{ color: txt }}>
+                  <input
+                    type="checkbox"
+                    checked={manterConectado}
+                    onChange={(e) => setManterConectado(e.target.checked)}
+                    className="size-4 rounded border-gold/40 text-gold focus:ring-gold bg-background/50 accent-[#d4b054]"
+                  />
+                  Manter conectado
+                </label>
               </div>
             )}
 

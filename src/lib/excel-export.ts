@@ -1,6 +1,6 @@
 import type { ProgramaData } from "./programa-store";
 
-export function exportarProgramaParaExcel(programa: ProgramaData) {
+export function exportarProgramaParaExcel(programa: ProgramaData, nomeArquivoCustomizado?: string) {
   const BOM = "\uFEFF";
   const sep = ";";
 
@@ -21,6 +21,8 @@ export function exportarProgramaParaExcel(programa: ProgramaData) {
       "Ingrediente Ativo",
       "Fornecedor",
       "Grupo",
+      "Família",
+      "Dosagem Viveiro",
       "Dosagem Plantio",
       "Dosagem 1 Ano / Recepa",
       "Dosagem Em Produção",
@@ -41,6 +43,8 @@ export function exportarProgramaParaExcel(programa: ProgramaData) {
         c.ingrediente,
         c.fornecedor,
         c.grupo,
+        c.familia,
+        c.dosagens?.["Viveiro"],
         c.dosagens?.["Plantio"],
         c.dosagens?.["1 ano / Recepa"],
         c.dosagens?.["Em Produção"],
@@ -66,6 +70,7 @@ export function exportarProgramaParaExcel(programa: ProgramaData) {
       "Cultura",
       "Fornecedor",
       "Grupo",
+      "Família",
       "Dosagem",
       "Composição / Ingrediente",
       "Função Agronômica",
@@ -84,6 +89,7 @@ export function exportarProgramaParaExcel(programa: ProgramaData) {
         ms.cultura,
         ms.fornecedor,
         ms.grupo,
+        ms.familia,
         ms.dosagem,
         ms.composicao,
         ms.funcao,
@@ -95,29 +101,12 @@ export function exportarProgramaParaExcel(programa: ProgramaData) {
     );
   });
 
-  linhas.push("");
-  linhas.push("");
-
-  // Seção 3: LINHA FOLIAR
-  linhas.push("PROGRAMA DE MANEJO COOXUPÉ - LINHA FOLIAR");
-  linhas.push(
-    ["ID", "Código", "Descrição / Item", "Classe Nutricional", "Fornecedor", "Status"]
-      .map(escapeCSV)
-      .join(sep),
-  );
-
-  (programa.foliar || []).forEach((f) => {
-    linhas.push(
-      [f.id, f.codigo, f.descricao, f.classe, f.fornecedor, f.status].map(escapeCSV).join(sep),
-    );
-  });
-
   const content = BOM + linhas.join("\r\n");
   const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Programa_Manejo_Cooxupe_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = nomeArquivoCustomizado || `Programa_Manejo_Cooxupe_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

@@ -7,6 +7,7 @@ import {
   Download,
   FileSpreadsheet,
   FileUp,
+  History,
   Info,
   KeyRound,
   Loader2,
@@ -61,9 +62,11 @@ import {
 import { useAuth } from "@/lib/auth";
 import {
   obterProgramaAtual,
+  obterHistoricoVersoes,
   restaurarProgramaPadrao,
   salvarProgramaAtual,
   type ProgramaData,
+  type VersaoPlanilha,
 } from "@/lib/programa-store";
 import { exportarProgramaParaExcel } from "@/lib/excel-export";
 import { copiarTexto } from "@/lib/share-utils";
@@ -71,20 +74,17 @@ import { copiarTexto } from "@/lib/share-utils";
 export const Route = createFileRoute("/_authenticated/usuarios")({
   head: () => ({
     meta: [
-      { title: "Gestão do Sistema | AgroBase" },
+      { title: "Gestão do Sistema | Guia Agronômico" },
       {
         name: "description",
-        content:
-          "Administração de acessos, convites de novos usuários e atualização da planilha do programa de manejo.",
+        content: "Gerenciamento de convites, permissões de usuários e atualização da base agronômica.",
       },
-      { property: "og:title", content: "Gestão do Sistema | AgroBase" },
-      { name: "robots", content: "noindex" },
     ],
   }),
   component: PaginaGestaoSistema,
 });
 
-const PAPEL_ROTULO: Record<string, string> = {
+const ROTULOS_PAPEL: Record<string, string> = {
   admin: "Administrador",
   tecnico: "Técnico",
 };
@@ -102,11 +102,13 @@ function PaginaGestaoSistema() {
   const { isAdmin, user } = useAuth();
   const qc = useQueryClient();
   const [programaAtual, setProgramaAtual] = useState<ProgramaData>(obterProgramaAtual);
+  const [historico, setHistorico] = useState<VersaoPlanilha[]>(obterHistoricoVersoes);
   const [usuarioRedefinirSenha, setUsuarioRedefinirSenha] = useState<{ id: string; nome: string; email: string } | null>(null);
 
   useEffect(() => {
     function atualizar() {
       setProgramaAtual(obterProgramaAtual());
+      setHistorico(obterHistoricoVersoes());
     }
     window.addEventListener("storage_programa_atualizado", atualizar);
     return () => window.removeEventListener("storage_programa_atualizado", atualizar);
@@ -127,42 +129,38 @@ function PaginaGestaoSistema() {
       toast.success("Papel de acesso atualizado.");
       await invalidar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (err: Error) => toast.error(err.message || "Não foi possível atualizar o papel."),
   });
 
   const reenviar = useMutation({
-    mutationFn: async (email: string) => {
-      const res = await reenviarConviteFn({ data: { email } });
-      if (res.enviadoPorSmtp) {
-        toast.success(`Convite reenviado para ${email}.`);
+    mutationFn: (email: string) => reenviarConviteFn({ data: { email } }),
+    onSuccess: (res) => {
+      if (res.linkConvite) {
+        toast.success("Link de convite gerado!");
       } else {
-        toast.info(`Convite registrado para ${email}. Link salvo no terminal.`);
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(res.link);
-          toast.success("Link de ativação copiado para a área de transferência!");
-        }
+        toast.success("Convite reenviado!");
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: () => toast.error("Não foi possível reenviar o convite."),
   });
 
   const excluir = useMutation({
-    mutationFn: (userId: string) => excluirUsuarioFn({ data: { userId } }),
+    mutationFn: (id: string) => excluirUsuarioFn({ data: { userId: id } }),
     onSuccess: async () => {
       toast.success("Registro removido com sucesso.");
       await invalidar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (err: Error) => toast.error(err.message || "Não foi possível remover o registro."),
   });
 
   if (!isAdmin) {
     return (
-      <AppShell titulo="Gestão do Sistema">
-        <div className="panel mx-auto max-w-md p-8 text-center space-y-3">
-          <Shield className="mx-auto size-10 text-muted-foreground" />
-          <p className="font-display text-base font-semibold">Área Restrita</p>
+      <AppShell titulo="Gestão do Sistema" descricao="Acesso restrito">
+        <div className="mx-auto max-w-lg text-center py-12 space-y-4">
+          <Shield className="size-12 text-destructive mx-auto" />
+          <h2 className="font-display text-xl font-bold">Acesso Restrito a Administradores</h2>
           <p className="text-sm text-muted-foreground">
-            Apenas usuários administradores podem acessar as configurações de gestão e permissões.
+            Apenas usuários com perfil de Administrador do Sistema possuem permissão para gerenciar usuários, convites e atualizações da base.
           </p>
         </div>
       </AppShell>
@@ -172,98 +170,107 @@ function PaginaGestaoSistema() {
   return (
     <AppShell
       titulo="Gestão do Sistema"
-      descricao="Gerenciamento de convites, permissões de acesso e atualização de dados agronômicos"
-      acoes={<DialogConvite onPronto={invalidar} />}
+      descricao="Gerencie o controle de acesso de usuários e as atualizações da base agronômica"
     >
-      <div className="mx-auto max-w-5xl space-y-6">
-        <Tabs defaultValue="acessos" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="acessos" className="gap-2">
-              <Users className="size-4" />
-              <span>Acessos & Convites</span>
+      <div className="mx-auto max-w-6xl space-y-6">
+        <Tabs defaultValue="usuarios" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="usuarios" className="gap-2 text-xs font-bold">
+              <Users className="size-4" /> Usuários e Permissões
             </TabsTrigger>
-            <TabsTrigger value="dados" className="gap-2">
-              <FileSpreadsheet className="size-4" />
-              <span>Atualização da Base (Planilha)</span>
+            <TabsTrigger value="dados" className="gap-2 text-xs font-bold">
+              <FileSpreadsheet className="size-4" /> Atualização da Base (Planilha)
             </TabsTrigger>
           </TabsList>
 
-          {/* Aba 1: Acessos e Convites */}
-          <TabsContent value="acessos" className="mt-5 space-y-4">
+          {/* Aba 1: Usuários e Permissões */}
+          <TabsContent value="usuarios" className="mt-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="font-display text-lg font-bold">Equipe Cadastrada</h2>
+                <p className="text-xs text-muted-foreground">
+                  Acompanhe convites pendentes e gerencie o nível de acesso dos usuários
+                </p>
+              </div>
+              <DialogConvite aoConcluir={invalidar} />
+            </div>
+
             {usuarios.isLoading ? (
-              <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" /> Carregando lista de usuários…
+              <div className="flex justify-center p-12">
+                <Loader2 className="size-8 animate-spin text-primary" />
               </div>
             ) : usuarios.isError ? (
-              <div className="panel p-6 text-sm text-destructive">
-                Não foi possível carregar os usuários cadastrados.
+              <div className="panel p-6 text-center text-sm text-destructive">
+                Não foi possível carregar a lista de usuários.
+              </div>
+            ) : usuarios.data?.length === 0 ? (
+              <div className="panel p-8 text-center space-y-2">
+                <p className="font-semibold">Nenhum usuário cadastrado.</p>
+                <p className="text-xs text-muted-foreground">Clique no botão acima para enviar o primeiro convite.</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {(usuarios.data ?? []).map((u) => {
-                  const ehAdmin = u.papel === "admin";
-                  const ehEuMesmo = u.id === user?.id;
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {usuarios.data?.map((u) => {
+                  const ehEuMesmo = user?.id === u.id;
+                  const ehAdmin = u.papeis.includes("admin");
 
                   return (
-                    <article
-                      key={u.id}
-                      className="panel flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4"
-                    >
-                      {/* Avatar + Informações do Usuário */}
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary font-bold text-xs border border-primary/20">
-                          {iniciais(u.nomeCompleto || u.email)}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="truncate font-display text-sm font-semibold">
-                              {u.nomeCompleto ?? u.email}
+                    <article key={u.id} className="panel p-4 relative flex flex-col justify-between space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                            {iniciais(u.nomeCompleto || u.email)}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="font-display text-sm font-bold truncate">
+                              {u.nomeCompleto || u.email.split("@")[0]}
                             </p>
-                            {ehEuMesmo && (
-                              <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                                você
-                              </span>
-                            )}
+                            <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                           </div>
-                          <p className="truncate text-xs text-muted-foreground">{u.email}</p>
-                          {u.cargo && <p className="truncate text-xs text-muted-foreground">{u.cargo}</p>}
                         </div>
+
+                        <Badge
+                          variant={u.confirmado ? "default" : "outline"}
+                          className="shrink-0 text-[10px]"
+                        >
+                          {u.confirmado ? "Ativo" : "Convite Pendente"}
+                        </Badge>
                       </div>
 
-                      {/* Status da Conta e Ações */}
-                      <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 pt-3 sm:pt-0 border-t border-border/60 sm:border-t-0 shrink-0">
-                        <Badge
-                          variant={u.confirmado ? "secondary" : "outline"}
-                          className="text-xs shrink-0"
-                        >
-                          {u.confirmado ? "Confirmado" : "Convite pendente"}
-                        </Badge>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                            Perfil de Acesso
+                          </span>
                           <Select
-                            value={u.papel ?? "nenhum"}
-                            onValueChange={(v) =>
-                              papel.mutate({ userId: u.id, papel: v as "admin" | "tecnico" | "nenhum" })
+                            value={u.papeis[0] || "tecnico"}
+                            disabled={ehEuMesmo}
+                            onValueChange={(val) =>
+                              papel.mutate({
+                                userId: u.id,
+                                papel: val as "admin" | "tecnico",
+                              })
                             }
                           >
-                            <SelectTrigger className="w-[145px] sm:w-[160px] h-8 text-xs">
+                            <SelectTrigger className="h-8 text-xs w-36">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="admin">{PAPEL_ROTULO["admin"]}</SelectItem>
-                              <SelectItem value="tecnico">{PAPEL_ROTULO["tecnico"]}</SelectItem>
-                              <SelectItem value="nenhum">Sem acesso</SelectItem>
+                              <SelectItem value="tecnico">Técnico</SelectItem>
+                              <SelectItem value="admin">Administrador</SelectItem>
                             </SelectContent>
                           </Select>
+                        </div>
 
+                        <div className="flex items-center gap-1">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="size-8" aria-label="Ações do usuário">
+                              <Button variant="ghost" size="icon" className="size-8">
                                 <MoreVertical className="size-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Opções do Usuário</DropdownMenuLabel>
+                            <DropdownMenuContent align="end" className="w-52">
+                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() =>
@@ -286,7 +293,7 @@ function PaginaGestaoSistema() {
                                 className="text-destructive focus:text-destructive"
                                 title={
                                   ehAdmin
-                                    ? "Trava de Segurança: Usuários administradores não podem ser excluídos diretamente. Altere para Técnico antes."
+                                    ? "Trava de Segurança: Usuários administradores não podem ser excluídos diretamente."
                                     : undefined
                                 }
                               >
@@ -339,6 +346,7 @@ function PaginaGestaoSistema() {
                     onClick={() => {
                       restaurarProgramaPadrao();
                       setProgramaAtual(obterProgramaAtual());
+                      setHistorico(obterHistoricoVersoes());
                       toast.success("Base restaurada para o padrão oficial 2026.");
                     }}
                     className="text-xs gap-1.5 text-muted-foreground hover:text-foreground"
@@ -348,7 +356,7 @@ function PaginaGestaoSistema() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
                 <div className="rounded-xl border border-border bg-card p-3">
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
                     Café
@@ -363,14 +371,6 @@ function PaginaGestaoSistema() {
                   </p>
                   <p className="mt-1 font-display text-xl font-bold text-primary">
                     {programaAtual.milhoSoja?.length || 0} <span className="text-xs font-normal">produtos</span>
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border bg-card p-3">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-                    Linha Foliar
-                  </p>
-                  <p className="mt-1 font-display text-xl font-bold text-primary">
-                    {programaAtual.foliar?.length || 0} <span className="text-xs font-normal">itens</span>
                   </p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3">
@@ -419,8 +419,9 @@ function PaginaGestaoSistema() {
                           throw new Error("O arquivo não possui o formato válido do Programa de Manejo.");
                         }
                         data.atualizadoEm = new Date().toISOString();
-                        salvarProgramaAtual(data);
+                        salvarProgramaAtual(data, file.name, user?.nomeCompleto || user?.email || "Administrador");
                         setProgramaAtual(data);
+                        setHistorico(obterHistoricoVersoes());
                         toast.success("Nova base agronômica aplicada com sucesso!");
                       } catch (err: any) {
                         toast.error(err.message || "Erro ao processar o arquivo enviado. Certifique-se de que é uma planilha válida.");
@@ -430,15 +431,60 @@ function PaginaGestaoSistema() {
                   }}
                 />
               </div>
+            </div>
 
-              <div className="rounded-xl bg-card p-4 border border-border text-xs leading-relaxed text-muted-foreground space-y-1.5">
-                <div className="flex items-center gap-1.5 font-semibold text-foreground">
-                  <Info className="size-4 text-gold shrink-0" />
-                  <span>Como funciona a atualização?</span>
-                </div>
-                <p>
-                  Quando uma nova safra ou atualização técnica for lançada pela equipe de Desenvolvimento Técnico, basta exportar a nova planilha e enviá-la acima. A aplicação valida a estrutura automaticamente e disponibiliza os novos produtos e dosagens para toda a equipe.
-                </p>
+            {/* Histórico de Planilhas e Atualizações da Base (Audit Trail) */}
+            <div className="panel p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <History className="size-5 text-gold" />
+                <h3 className="font-display text-base font-bold">Histórico de Versões & Planilhas Enviadas</h3>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Registro completo de planilhas e atualizações da base agronômica para comprovação e auditoria. É possível exportar o arquivo Excel de qualquer versão enviada anteriormente.
+              </p>
+
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-muted/50 text-muted-foreground border-b border-border">
+                    <tr>
+                      <th className="p-3 font-semibold">Data / Hora</th>
+                      <th className="p-3 font-semibold">Arquivo / Versão</th>
+                      <th className="p-3 font-semibold">Enviado Por</th>
+                      <th className="p-3 font-semibold text-center">Café</th>
+                      <th className="p-3 font-semibold text-center">Milho & Soja</th>
+                      <th className="p-3 font-semibold text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {historico.map((v) => (
+                      <tr key={v.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="p-3 font-mono text-[11px]">
+                          {new Date(v.dataEnvio).toLocaleString("pt-BR")}
+                        </td>
+                        <td className="p-3 font-medium text-foreground">
+                          {v.nomeArquivo}
+                          <span className="block text-[10px] text-gold">{v.versao}</span>
+                        </td>
+                        <td className="p-3 text-muted-foreground">{v.enviadoPor}</td>
+                        <td className="p-3 text-center font-bold text-primary">{v.totalCafe}</td>
+                        <td className="p-3 text-center font-bold text-primary">{v.totalMilhoSoja}</td>
+                        <td className="p-3 text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              exportarProgramaParaExcel(v.dados, `Historico_${v.nomeArquivo.replace(/\.[^/.]+$/, "")}.csv`);
+                              toast.success(`Exportando versão "${v.nomeArquivo}"...`);
+                            }}
+                            className="h-8 text-[11px] gap-1 border-gold/40 text-gold hover:bg-gold hover:text-black font-semibold"
+                          >
+                            <Download className="size-3" /> Exportar (Excel)
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </TabsContent>
@@ -456,6 +502,161 @@ function PaginaGestaoSistema() {
   );
 }
 
+function DialogConvite({ aoConcluir }: { aoConcluir: () => void }) {
+  const [aberto, setAberto] = useState(false);
+  const [email, setEmail] = useState("");
+  const [nome, setNome] = useState("");
+  const [papel, setPapel] = useState<"admin" | "tecnico">("tecnico");
+  const [linkGerado, setLinkGerado] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const convidar = useMutation({
+    mutationFn: () =>
+      convidarUsuarioFn({
+        data: { email, nomeCompleto: nome || undefined, papel },
+      }),
+    onSuccess: (res) => {
+      if (res.linkConvite) {
+        setLinkGerado(res.linkConvite);
+        toast.success("Convite criado! Copie o link para enviar.");
+      } else {
+        toast.success("Convite gerado com sucesso!");
+        setAberto(false);
+        reset();
+      }
+      aoConcluir();
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao convidar usuário."),
+  });
+
+  function reset() {
+    setEmail("");
+    setNome("");
+    setPapel("tecnico");
+    setLinkGerado(null);
+    setCopiado(false);
+  }
+
+  async function copiarLink() {
+    if (!linkGerado) return;
+    const ok = await copiarTexto(linkGerado);
+    if (ok) {
+      if (inputRef.current) inputRef.current.select();
+      setCopiado(true);
+      toast.success("Link de convite copiado!");
+      setTimeout(() => setCopiado(false), 3000);
+    } else {
+      toast.error("Selecione e copie o texto manualmente.");
+    }
+  }
+
+  return (
+    <Dialog open={aberto} onOpenChange={(v) => { setAberto(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <UserPlus className="size-4" /> Convidar Usuário
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Convidar Novo Usuário</DialogTitle>
+          <DialogDescription>
+            Informe os dados do usuário para gerar o link de primeiro acesso à plataforma.
+          </DialogDescription>
+        </DialogHeader>
+
+        {linkGerado ? (
+          <div className="space-y-4 py-3">
+            <div className="rounded-xl border border-[#1b4e33] bg-[#071e11] p-4 text-emerald-50 text-xs space-y-2">
+              <p className="font-bold text-gold">✅ Convite gerado com sucesso!</p>
+              <p className="text-emerald-100/90 leading-relaxed">
+                Envie o link abaixo para <strong>{email}</strong> definir sua senha e acessar a plataforma:
+              </p>
+              <div className="flex gap-2 pt-2">
+                <Input
+                  ref={inputRef}
+                  readOnly
+                  value={linkGerado}
+                  className="bg-[#0b2b18] border-gold/40 text-gold text-xs h-9 font-mono"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={copiarLink}
+                  className="shrink-0 bg-gold text-[#071e11] hover:bg-[#e2bd5d] font-bold text-xs gap-1.5"
+                >
+                  {copiado ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  {copiado ? "Copiado!" : "Copiar"}
+                </Button>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" onClick={() => { setAberto(false); reset(); }}>
+                Concluir
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              convidar.mutate();
+            }}
+            className="space-y-4 py-2"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="convite-email">E-mail Corporativo *</Label>
+              <Input
+                id="convite-email"
+                type="email"
+                required
+                placeholder="usuario@cooxupe.com.br"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="convite-nome">Nome Completo</Label>
+              <Input
+                id="convite-nome"
+                placeholder="Ex: João da Silva"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Perfil de Acesso</Label>
+              <Select value={papel} onValueChange={(v) => setPapel(v as "admin" | "tecnico")}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tecnico">Técnico (Visualização e Consultas)</SelectItem>
+                  <SelectItem value="admin">Administrador (Gestão de Usuários e Base)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={() => setAberto(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={convidar.isPending}>
+                {convidar.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Gerar Convite
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function DialogRedefinirSenha({
   usuario,
   onFechar,
@@ -463,288 +664,94 @@ function DialogRedefinirSenha({
   usuario: { id: string; nome: string; email: string };
   onFechar: () => void;
 }) {
-  const [linkGerado, setLinkGerado] = useState<{ link: string; enviadoPorSmtp: boolean } | null>(null);
+  const [linkReset, setLinkReset] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const solicitar = useMutation({
-    mutationFn: () => solicitarRedefinicaoSenhaFn({ data: { userId: usuario.id } }),
+    mutationFn: () => solicitarRedefinicaoSenhaFn({ data: { email: usuario.email } }),
     onSuccess: (res) => {
-      if (res.enviadoPorSmtp) {
-        toast.success(`E-mail de redefinição enviado com sucesso para ${usuario.email}!`);
-        onFechar();
-      } else {
+      if (res.linkRedefinicao) {
+        setLinkReset(res.linkRedefinicao);
         toast.success("Link de redefinição de senha gerado!");
-        setLinkGerado({ link: res.link, enviadoPorSmtp: false });
+      } else {
+        toast.success("Solicitação processada com sucesso!");
+        onFechar();
       }
     },
-    onError: (e: Error) => toast.error(e.message || "Não foi possível gerar o link de redefinição."),
+    onError: (err: Error) => toast.error(err.message || "Erro ao solicitar redefinição de senha."),
   });
 
   async function copiarLink() {
-    if (linkGerado?.link) {
-      if (inputRef.current) {
-        inputRef.current.focus();
-        inputRef.current.select();
-        inputRef.current.setSelectionRange(0, 99999);
-      }
-      const ok = await copiarTexto(linkGerado.link, inputRef.current);
-      if (ok) {
-        setCopiado(true);
-        toast.success("Link de redefinição copiado para a área de transferência!");
-        setTimeout(() => setCopiado(false), 2500);
-      } else {
-        toast.error("Não foi possível copiar o link.");
-      }
+    if (!linkReset) return;
+    const ok = await copiarTexto(linkReset);
+    if (ok) {
+      if (inputRef.current) inputRef.current.select();
+      setCopiado(true);
+      toast.success("Link de redefinição de senha copiado!");
+      setTimeout(() => setCopiado(false), 3000);
+    } else {
+      toast.error("Selecione e copie o texto manualmente.");
     }
   }
 
   return (
     <Dialog open onOpenChange={(v) => !v && onFechar()}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Redefinição de Senha do Usuário</DialogTitle>
+          <DialogTitle>Redefinir Senha do Usuário</DialogTitle>
           <DialogDescription>
-            Gerar link para <strong>{usuario.nome}</strong> ({usuario.email}) redefinir a própria senha com segurança.
+            Gere o link de redefinição de senha para <strong>{usuario.nome}</strong> ({usuario.email}).
           </DialogDescription>
         </DialogHeader>
 
-        {linkGerado ? (
-          <div className="space-y-4 py-2">
-            <div className="rounded-xl border border-gold/40 bg-gold/10 p-4 text-xs leading-relaxed space-y-2">
-              <div className="flex items-center gap-2 font-bold text-gold">
-                <Info className="size-4 shrink-0" />
-                <span>Link de Redefinição Gerado!</span>
-              </div>
-              <p className="text-muted-foreground">
-                O próprio usuário deve abrir o link abaixo para cadastrar sua nova senha de uso pessoal.
+        {linkReset ? (
+          <div className="space-y-4 py-3">
+            <div className="rounded-xl border border-[#1b4e33] bg-[#071e11] p-4 text-emerald-50 text-xs space-y-2">
+              <p className="font-bold text-gold">🔑 Link de Redefinição Gerado!</p>
+              <p className="text-emerald-100/90 leading-relaxed">
+                Copie e envie o link abaixo para o usuário cadastrar sua nova senha pessoal:
               </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Link de Redefinição de Senha</Label>
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2 pt-2">
                 <Input
                   ref={inputRef}
                   readOnly
-                  value={linkGerado.link}
-                  onClick={(e) => e.currentTarget.select()}
-                  className="text-xs font-mono bg-muted select-all"
+                  value={linkReset}
+                  className="bg-[#0b2b18] border-gold/40 text-gold text-xs h-9 font-mono"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
                 />
-                <Button size="sm" variant="outline" onClick={copiarLink} className="shrink-0 gap-1.5">
-                  {copiado ? <Check className="size-4 text-emerald-500" /> : <Copy className="size-4" />}
-                  <span>{copiado ? "Copiado!" : "Copiar"}</span>
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={copiarLink}
+                  className="shrink-0 bg-gold text-[#071e11] hover:bg-[#e2bd5d] font-bold text-xs gap-1.5"
+                >
+                  {copiado ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  {copiado ? "Copiado!" : "Copiar"}
                 </Button>
               </div>
             </div>
-
-            <DialogFooter className="pt-3">
-              <Button onClick={onFechar} className="w-full">
+            <DialogFooter>
+              <Button type="button" onClick={onFechar}>
                 Concluir
               </Button>
             </DialogFooter>
           </div>
         ) : (
-          <div className="space-y-4 pt-2">
+          <div className="space-y-4 py-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Ao confirmar, um link exclusivo com validade de 48 horas será gerado. O próprio usuário poderá definir a sua nova senha pessoal ao acessar o link.
+              O administrador não define senhas diretamente por motivos de segurança. Ao clicar abaixo, um link único de redefinição será gerado para ser enviado ao usuário.
             </p>
-
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={onFechar}>
                 Cancelar
               </Button>
-              <Button
-                type="button"
-                onClick={() => solicitar.mutate()}
-                disabled={solicitar.isPending}
-              >
+              <Button type="button" onClick={() => solicitar.mutate()} disabled={solicitar.isPending}>
                 {solicitar.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
                 Gerar Link de Redefinição
               </Button>
             </DialogFooter>
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function DialogConvite({ onPronto }: { onPronto: () => Promise<void> }) {
-  const [aberto, setAberto] = useState(false);
-  const [email, setEmail] = useState("");
-  const [nome, setNome] = useState("");
-  const [cargo, setCargo] = useState("");
-  const [papel, setPapel] = useState<"admin" | "tecnico">("tecnico");
-  const [linkGerado, setLinkGerado] = useState<{ email: string; link: string; enviadoPorSmtp: boolean } | null>(null);
-  const [copiado, setCopiado] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const convidar = useMutation({
-    mutationFn: () =>
-      convidarUsuarioFn({ data: { email, nomeCompleto: nome, cargo, papel } }),
-    onSuccess: async (res) => {
-      await onPronto();
-      if (res.enviadoPorSmtp) {
-        toast.success("Convite enviado com sucesso para a caixa de entrada!");
-        setAberto(false);
-        limparForm();
-      } else {
-        toast.success(`Convite criado com sucesso para ${res.email}!`);
-        setLinkGerado({ email: res.email, link: res.link, enviadoPorSmtp: false });
-      }
-    },
-    onError: (e: Error) => toast.error(e.message || "Não foi possível enviar o convite."),
-  });
-
-  function limparForm() {
-    setEmail("");
-    setNome("");
-    setCargo("");
-    setLinkGerado(null);
-    setCopiado(false);
-  }
-
-  function fechar(open: boolean) {
-    setAberto(open);
-    if (!open) {
-      setTimeout(limparForm, 300);
-    }
-  }
-
-  async function copiarLink() {
-    if (linkGerado?.link) {
-      if (inputRef.current) {
-        inputRef.current.focus();
-        inputRef.current.select();
-        inputRef.current.setSelectionRange(0, 99999);
-      }
-      const ok = await copiarTexto(linkGerado.link, inputRef.current);
-      if (ok) {
-        setCopiado(true);
-        toast.success("Link de ativação copiado para a área de transferência!");
-        setTimeout(() => setCopiado(false), 2500);
-      } else {
-        toast.error("Não foi possível copiar o link.");
-      }
-    }
-  }
-
-  return (
-    <Dialog open={aberto} onOpenChange={fechar}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="h-9 px-3 gap-1.5 font-medium">
-          <UserPlus className="size-4" />
-          <span>Convidar</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Convidar integrante</DialogTitle>
-          <DialogDescription>
-            Enviaremos um e-mail de confirmação. O próprio usuário define a senha no primeiro
-            acesso.
-          </DialogDescription>
-        </DialogHeader>
-
-        {linkGerado ? (
-          <div className="space-y-4 py-2">
-            <div className="rounded-xl border border-gold/40 bg-gold/10 p-4 text-xs leading-relaxed space-y-2">
-              <div className="flex items-center gap-2 font-bold text-gold">
-                <Info className="size-4 shrink-0" />
-                <span>Convite registrado com sucesso!</span>
-              </div>
-              <p className="text-muted-foreground">
-                <strong>Servidor SMTP de e-mail não configurado em ambiente local.</strong> O e-mail não é enviado para a caixa de entrada real a menos que haja credenciais SMTP configuradas no arquivo <code className="bg-background px-1 py-0.5 rounded border border-border">.env</code> (<code className="text-primary">SMTP_HOST</code>, <code className="text-primary">SMTP_USER</code>, <code className="text-primary">SMTP_PASS</code>).
-              </p>
-              <p className="text-muted-foreground">
-                O link de ativação foi impresso no terminal e pode ser copiado diretamente abaixo:
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Link de Ativação do Usuário</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  ref={inputRef}
-                  readOnly
-                  value={linkGerado.link}
-                  onClick={(e) => e.currentTarget.select()}
-                  className="text-xs font-mono bg-muted select-all"
-                />
-                <Button size="sm" variant="outline" onClick={copiarLink} className="shrink-0 gap-1.5">
-                  {copiado ? <Check className="size-4 text-emerald-500" /> : <Copy className="size-4" />}
-                  <span>{copiado ? "Copiado!" : "Copiar"}</span>
-                </Button>
-              </div>
-            </div>
-
-            <DialogFooter className="pt-3">
-              <Button onClick={() => fechar(false)} className="w-full">
-                Concluir
-              </Button>
-            </DialogFooter>
-          </div>
-        ) : (
-          <form
-            className="space-y-4 mt-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              convidar.mutate();
-            }}
-          >
-            <div className="space-y-1.5">
-              <Label htmlFor="nome">Nome completo</Label>
-              <Input
-                id="nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                maxLength={120}
-                placeholder="Ex: Maria Silva"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email-convite">E-mail corporativo</Label>
-              <Input
-                id="email-convite"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                maxLength={255}
-                placeholder="nome@cooxupe.com.br"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cargo">Cargo (opcional)</Label>
-              <Input
-                id="cargo"
-                value={cargo}
-                onChange={(e) => setCargo(e.target.value)}
-                maxLength={120}
-                placeholder="Ex: Engenheiro Agrônomo"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Papel de acesso</Label>
-              <Select value={papel} onValueChange={(v) => setPapel(v as "admin" | "tecnico")}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tecnico">Técnico - consulta completa</SelectItem>
-                  <SelectItem value="admin">Administrador - consulta e gestão</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter className="pt-2">
-              <Button type="submit" disabled={convidar.isPending} className="w-full">
-                {convidar.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-                Enviar convite
-              </Button>
-            </DialogFooter>
-          </form>
         )}
       </DialogContent>
     </Dialog>

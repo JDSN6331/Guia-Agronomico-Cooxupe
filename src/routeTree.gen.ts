@@ -15,7 +15,6 @@ import { Route as DefinirSenhaRouteImport } from './routes/definir-senha'
 import { Route as AuthenticatedCafeRouteImport } from './routes/_authenticated/cafe'
 import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenticated/calculadora'
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
-import { Route as AuthenticatedFoliarRouteImport } from './routes/_authenticated/foliar'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedMilhoSojaRouteImport } from './routes/_authenticated/milho-soja'
 import { Route as AuthenticatedMisturaCaldaRouteImport } from './routes/_authenticated/mistura-calda'
@@ -51,11 +50,6 @@ const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
   path: '/calendario',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedFoliarRoute = AuthenticatedFoliarRouteImport.update({
-  id: '/foliar',
-  path: '/foliar',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedInicioRoute = AuthenticatedInicioRouteImport.update({
   id: '/inicio',
   path: '/inicio',
@@ -84,7 +78,6 @@ export interface FileRoutesByFullPath {
   '/cafe': typeof AuthenticatedCafeRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
-  '/foliar': typeof AuthenticatedFoliarRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/milho-soja': typeof AuthenticatedMilhoSojaRoute
   '/mistura-calda': typeof AuthenticatedMisturaCaldaRoute
@@ -96,7 +89,6 @@ export interface FileRoutesByTo {
   '/cafe': typeof AuthenticatedCafeRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
-  '/foliar': typeof AuthenticatedFoliarRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/milho-soja': typeof AuthenticatedMilhoSojaRoute
   '/mistura-calda': typeof AuthenticatedMisturaCaldaRoute
@@ -110,7 +102,6 @@ export interface FileRoutesById {
   '/_authenticated/cafe': typeof AuthenticatedCafeRoute
   '/_authenticated/calculadora': typeof AuthenticatedCalculadoraRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
-  '/_authenticated/foliar': typeof AuthenticatedFoliarRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/milho-soja': typeof AuthenticatedMilhoSojaRoute
   '/_authenticated/mistura-calda': typeof AuthenticatedMisturaCaldaRoute
@@ -124,7 +115,6 @@ export interface FileRouteTypes {
     | '/cafe'
     | '/calculadora'
     | '/calendario'
-    | '/foliar'
     | '/inicio'
     | '/milho-soja'
     | '/mistura-calda'
@@ -136,7 +126,6 @@ export interface FileRouteTypes {
     | '/cafe'
     | '/calculadora'
     | '/calendario'
-    | '/foliar'
     | '/inicio'
     | '/milho-soja'
     | '/mistura-calda'
@@ -149,7 +138,6 @@ export interface FileRouteTypes {
     | '/_authenticated/cafe'
     | '/_authenticated/calculadora'
     | '/_authenticated/calendario'
-    | '/_authenticated/foliar'
     | '/_authenticated/inicio'
     | '/_authenticated/milho-soja'
     | '/_authenticated/mistura-calda'
@@ -206,13 +194,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalendarioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/foliar': {
-      id: '/_authenticated/foliar'
-      path: '/foliar'
-      fullPath: '/foliar'
-      preLoaderRoute: typeof AuthenticatedFoliarRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/inicio': {
       id: '/_authenticated/inicio'
       path: '/inicio'
@@ -248,7 +229,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCafeRoute: typeof AuthenticatedCafeRoute
   AuthenticatedCalculadoraRoute: typeof AuthenticatedCalculadoraRoute
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
-  AuthenticatedFoliarRoute: typeof AuthenticatedFoliarRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedMilhoSojaRoute: typeof AuthenticatedMilhoSojaRoute
   AuthenticatedMisturaCaldaRoute: typeof AuthenticatedMisturaCaldaRoute
@@ -259,7 +239,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCafeRoute: AuthenticatedCafeRoute,
   AuthenticatedCalculadoraRoute: AuthenticatedCalculadoraRoute,
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
-  AuthenticatedFoliarRoute: AuthenticatedFoliarRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedMilhoSojaRoute: AuthenticatedMilhoSojaRoute,
   AuthenticatedMisturaCaldaRoute: AuthenticatedMisturaCaldaRoute,

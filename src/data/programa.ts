@@ -4,7 +4,6 @@ import { obterProgramaAtual, type ProgramaData } from "@/lib/programa-store";
 export type {
   ProdutoCafe,
   ProdutoMilhoSoja,
-  ItemFoliar,
   Nutriente,
   JanelaCalendario,
   ProgramaData,
@@ -40,6 +39,5 @@ export function buscaEm(termo: string, campos: (string | undefined)[]): boolean 
 export const totais = {
   cafe: programa.cafe?.length || 0,
   milhoSoja: programa.milhoSoja?.length || 0,
-  foliar: programa.foliar?.length || 0,
   janelas: (programa.calendarioAdulto?.length || 0) + (programa.calendarioFormacao?.length || 0),
 };

@@ -98,8 +98,9 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 /**
  * Autentica usuário via e-mail e senha.
  */
-export async function entrarComEmailESenha(email: string, senha: string) {
+export async function entrarComEmailESenha(email: string, senha: string, manterConectado = false) {
   let rawEmail = email.trim().toLowerCase();
+  const days = manterConectado ? 30 : 1;
 
   // Tratamento resiliente para variações e erros de digitação no e-mail do Administrador
   const isJoseDuque =
@@ -114,7 +115,7 @@ export async function entrarComEmailESenha(email: string, senha: string) {
   // Garantia absoluta para o login do Administrador com 123456 ou JoséDuque2026!
   if (isJoseDuque && (senha === "123456" || senha === "JoséDuque2026!")) {
     const sessionToken = generateToken();
-    const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_DAYS * 24 * 3600 * 1000);
+    const expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000);
     const expiresStr = expiresAt.toISOString();
 
     try {
@@ -183,9 +184,13 @@ export async function entrarComEmailESenha(email: string, senha: string) {
     throw new Error("E-mail ou senha incorretos.");
   }
 
+  if (user.status !== "active") {
+    throw new Error("Sua conta está desativada. Entre em contato com o suporte.");
+  }
+
   // Criar nova sessão
   const sessionToken = generateToken();
-  const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_DAYS * 24 * 3600 * 1000);
+  const expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000);
   const expiresStr = expiresAt.toISOString();
 
   try {

@@ -26,7 +26,6 @@ export const Route = createFileRoute("/_authenticated/milho-soja")({
         property: "og:description",
         content: "Produtos para milho e soja do Programa de Manejo Técnico.",
       },
-
     ],
   }),
   component: PaginaMilhoSoja,
@@ -35,10 +34,12 @@ export const Route = createFileRoute("/_authenticated/milho-soja")({
 function PaginaMilhoSoja() {
   const [termo, setTermo] = useState("");
   const [grupo, setGrupo] = useState("todos");
+  const [familia, setFamilia] = useState("todos");
   const [fornecedor, setFornecedor] = useState("todos");
   const [cultura, setCultura] = useState("todos");
 
   const grupos = useMemo(() => unicos(programa.milhoSoja.map((p) => p.grupo)), []);
+  const familias = useMemo(() => unicos(programa.milhoSoja.map((p) => p.familia)), []);
   const fornecedores = useMemo(() => unicos(programa.milhoSoja.map((p) => p.fornecedor)), []);
   const culturas = useMemo(() => unicos(programa.milhoSoja.map((p) => p.cultura)), []);
 
@@ -47,11 +48,12 @@ function PaginaMilhoSoja() {
       programa.milhoSoja.filter(
         (p) =>
           (grupo === "todos" || p.grupo === grupo) &&
+          (familia === "todos" || p.familia === familia) &&
           (fornecedor === "todos" || p.fornecedor === fornecedor) &&
           (cultura === "todos" || p.cultura === cultura) &&
-          buscaEm(termo, [p.produto, p.fornecedor, p.grupo, p.cultura, p.funcao, p.composicao]),
+          buscaEm(termo, [p.produto, p.fornecedor, p.grupo, p.familia, p.cultura, p.funcao, p.composicao]),
       ),
-    [termo, grupo, fornecedor, cultura],
+    [termo, grupo, familia, fornecedor, cultura],
   );
 
   return (
@@ -63,11 +65,12 @@ function PaginaMilhoSoja() {
         <BarraFiltros
           termo={termo}
           onTermo={setTermo}
-          placeholder="Buscar por produto, fornecedor, composição ou função…"
+          placeholder="Buscar por produto, ingrediente ativo, fornecedor ou função (alvo)..."
           total={programa.milhoSoja.length}
           exibidos={lista.length}
           filtros={[
             { id: "grupo", rotulo: "Grupo", opcoes: grupos, valor: grupo, onChange: setGrupo },
+            { id: "familia", rotulo: "Família", opcoes: familias, valor: familia, onChange: setFamilia },
             {
               id: "cultura",
               rotulo: "Cultura",
@@ -86,7 +89,7 @@ function PaginaMilhoSoja() {
         />
 
         {lista.length === 0 ? (
-          <VazioResultado />
+          <VazioResultado onLimpar={() => { setTermo(""); setGrupo("todos"); setFamilia("todos"); setFornecedor("todos"); setCultura("todos"); }} />
         ) : (
           <Accordion type="multiple" className="space-y-3">
             {lista.map((p) => (
@@ -110,7 +113,7 @@ function Ficha({ produto: p }: { produto: ProdutoMilhoSoja }) {
           <div className="min-w-0">
             <p className="truncate font-display text-[15px] font-semibold">{p.produto}</p>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {[p.grupo, p.cultura, p.fornecedor].filter(Boolean).join(" · ")}
+              {[p.grupo, p.familia, p.cultura, p.fornecedor].filter(Boolean).join(" · ")}
             </p>
           </div>
         </div>
@@ -119,22 +122,25 @@ function Ficha({ produto: p }: { produto: ProdutoMilhoSoja }) {
         <div className="grid gap-4 sm:grid-cols-2">
           {p.dosagem && <Campo rotulo="Dosagem">{p.dosagem}</Campo>}
           {p.composicao && <Campo rotulo="Composição">{p.composicao}</Campo>}
+          {p.familia && <Campo rotulo="Família">{p.familia}</Campo>}
         </div>
         {p.funcao && <Campo rotulo="Função">{p.funcao}</Campo>}
         {p.instrucoes && <Campo rotulo="Instruções de aplicação">{p.instrucoes}</Campo>}
         <div className="flex flex-wrap gap-2">
           {p.grupo && <Badge variant="secondary">{p.grupo}</Badge>}
+          {p.familia && <Badge variant="outline" className="border-blue-500/30 text-blue-400">{p.familia}</Badge>}
           {p.cultura && <Badge variant="outline">{p.cultura}</Badge>}
           <Carencia dias={p.carencia} />
         </div>
 
         <AcoesFichaProduto
-          dados={{
+          p={{
             titulo: p.produto,
             cultura: p.cultura || "Milho / Soja",
             ingrediente: p.composicao,
             fornecedor: p.fornecedor,
             grupo: p.grupo,
+            familia: p.familia,
             dosagemUnica: p.dosagem,
             funcao: p.funcao,
             instrucoes: p.instrucoes,
@@ -145,4 +151,3 @@ function Ficha({ produto: p }: { produto: ProdutoMilhoSoja }) {
     </AccordionItem>
   );
 }
-

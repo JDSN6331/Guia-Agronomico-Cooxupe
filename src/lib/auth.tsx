@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { obterSessaoFn, sairFn } from "./auth.functions";
 
 export type Papel = "admin" | "tecnico";
@@ -73,6 +74,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPapeis([]);
     }
   }, []);
+
+  // Timeout de desconexão automática por 30 minutos de inatividade (30 * 60 * 1000 ms)
+  useEffect(() => {
+    if (!user) return;
+
+    let timer: NodeJS.Timeout;
+    const INATIVIDADE_MAXIMA = 30 * 60 * 1000;
+
+    const resetarTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        void sair().then(() => {
+          toast.info("Sessão encerrada por inatividade (30 min) para sua segurança.", {
+            duration: 7000,
+          });
+          if (typeof window !== "undefined") {
+            window.location.href = "/";
+          }
+        });
+      }, INATIVIDADE_MAXIMA);
+    };
+
+    const eventos = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+    eventos.forEach((e) => window.addEventListener(e, resetarTimer, { passive: true }));
+    resetarTimer();
+
+    return () => {
+      clearTimeout(timer);
+      eventos.forEach((e) => window.removeEventListener(e, resetarTimer));
+    };
+  }, [user, sair]);
 
   const session = useMemo(() => (user ? { user } : null), [user]);
 
