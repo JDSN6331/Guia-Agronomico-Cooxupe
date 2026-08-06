@@ -159,7 +159,7 @@ export function AppShell({
                 <ThemeToggle />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="grid size-9 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    <button className="grid size-9 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-gold/45 ring-offset-2 ring-offset-background transition-shadow hover:ring-gold/80">
                       {iniciais(nome)}
                     </button>
                   </DropdownMenuTrigger>
