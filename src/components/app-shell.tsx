@@ -82,9 +82,9 @@ export function AppShell({
             to={item.to}
             onClick={() => setMenuAberto(false)}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               ativo
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft font-semibold"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft font-semibold before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-gold"
                 : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             )}
           >
@@ -107,7 +107,7 @@ export function AppShell({
           </div>
           <Separator className="mb-4" />
           {navLinks}
-          <div className="mt-auto rounded-xl bg-sidebar-accent/60 p-3 text-xs leading-relaxed text-sidebar-accent-foreground">
+          <div className="mt-auto rounded-xl border border-gold/25 bg-sidebar-accent/60 p-3 text-xs leading-relaxed text-sidebar-accent-foreground">
             <p className="font-semibold text-gold">Base de Conhecimento Técnico</p>
             <p className="mt-1 opacity-80">
               Consulte sempre a bula e o intervalo de segurança antes da aplicação.
@@ -159,7 +159,7 @@ export function AppShell({
                 <ThemeToggle />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="grid size-9 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    <button className="grid size-9 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-gold/45 ring-offset-2 ring-offset-background transition-shadow hover:ring-gold/80">
                       {iniciais(nome)}
                     </button>
                   </DropdownMenuTrigger>
