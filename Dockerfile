@@ -24,16 +24,20 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
+# Instalar biblioteca de runtime libstdc++ para rodar modulos C++ (better-sqlite3) em Alpine Linux
+RUN apk add --no-cache libstdc++
+
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOST=0.0.0.0
 ENV NITRO_HOST=0.0.0.0
 ENV NITRO_PORT=3000
 
-# Copiar build e dependências de produção do estágio anterior
+# Copiar build, dependências de produção e pasta database do estágio anterior
 COPY --from=builder /app/.output ./.output
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/database ./database
 
 EXPOSE 3000
 
