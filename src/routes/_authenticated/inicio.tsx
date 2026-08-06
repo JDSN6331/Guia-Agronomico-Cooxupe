@@ -143,12 +143,16 @@ function Inicio() {
 
 
 
-        {/* Métricas com Destaque Dourado Elegante (#c59b27 / text-amber-500) */}
+        {/* Métricas com destaque dourado */}
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {metricas.map((m) => (
-            <div key={m.rotulo} className="panel p-4 hover:border-amber-500/30 transition-colors">
-              <p className="font-display text-3xl font-bold text-[#c59b27] dark:text-amber-400">{m.valor}</p>
-              <p className="mt-1 text-xs leading-snug text-muted-foreground font-medium">{m.rotulo}</p>
+            <div
+              key={m.rotulo}
+              className="panel relative overflow-hidden p-4 transition-colors hover:border-gold/40"
+            >
+              <span className="absolute inset-x-0 top-0 h-0.5 bg-gold/70" />
+              <p className="font-display text-3xl font-bold text-gold">{m.valor}</p>
+              <p className="mt-1 text-xs font-medium leading-snug text-muted-foreground">{m.rotulo}</p>
             </div>
           ))}
         </section>
@@ -156,18 +160,23 @@ function Inicio() {
         {/* Atalhos Rápidos */}
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ATALHOS.map((a) => (
-            <Link key={a.to} to={a.to} className="panel group p-5 transition-all hover:shadow-lifted hover:border-amber-500/30">
-              <span className="grid size-10 place-items-center rounded-xl bg-secondary text-secondary-foreground group-hover:bg-amber-500/10 group-hover:text-[#c59b27] transition-colors">
+            <Link
+              key={a.to}
+              to={a.to}
+              className="panel group p-5 transition-all hover:border-gold/40 hover:shadow-lifted"
+            >
+              <span className="grid size-10 place-items-center rounded-xl bg-accent text-accent-foreground transition-colors group-hover:bg-gold/15 group-hover:text-gold">
                 <a.icon size={22} />
               </span>
               <h3 className="mt-4 flex items-center gap-2 font-display text-base font-semibold">
                 {a.titulo}
-                <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 text-[#c59b27]" />
+                <ArrowRight className="size-4 -translate-x-1 text-gold opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{a.texto}</p>
             </Link>
           ))}
         </section>
+
 
         <section className="flex gap-3 rounded-xl border border-terra/40 bg-terra/10 p-4">
           <TriangleAlert className="mt-0.5 size-5 shrink-0 text-terra" />
