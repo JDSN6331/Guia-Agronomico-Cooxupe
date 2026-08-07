@@ -1,7 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
 import { scryptSync } from "node:crypto";
-import Database from "better-sqlite3";
 import postgres from "postgres";
 
 // Determinar se estamos em modo produção (PostgreSQL) ou modo local de desenvolvimento (SQLite)
@@ -43,7 +42,8 @@ if (isProd) {
     console.error("[PostgreSQL Setup Error]:", e?.message || e);
   }
 } else {
-  // Inicialização do SQLite para desenvolvimento local
+  // Inicialização do SQLite para desenvolvimento local (import dinâmico para não carregar nativos em produção)
+  const { default: Database } = await import("better-sqlite3");
   const dbDir = path.resolve(process.cwd(), "database");
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
