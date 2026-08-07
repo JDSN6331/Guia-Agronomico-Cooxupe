@@ -1,8 +1,9 @@
+import { randomUUID } from "node:crypto";
 // Core Authentication Server logic powered by PostgreSQL / SQLite
 import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { sql } from "./db.server";
 import { generateToken, hashPassword, hashToken, verifyPassword } from "./crypto.server";
-import { enviarEmailRecuperacao } from "./email.server";
+import { enviarEmailConvite, enviarEmailRecuperacao } from "./email.server";
 
 export type SessionUser = {
   id: string;
@@ -144,10 +145,10 @@ export async function entrarComEmailESenha(email: string, senha: string, manterC
       }
 
       const tokenHash = hashToken(sessionToken);
-      const sessionId = generateToken();
+      const sessionId = randomUUID();
       await sql`
         INSERT INTO public.user_sessions (id, user_id, session_token_hash, expires_at)
-        VALUES (${sessionId}, ${adminId}::uuid, ${tokenHash}, ${expiresStr})
+        VALUES (${sessionId}::uuid, ${adminId}::uuid, ${tokenHash}, ${expiresStr})
       `;
     } catch (err) {
       console.warn("[Auth Warning] Aviso ao gravar sessão do admin no banco. Autenticando com cookie:", err);
@@ -195,11 +196,11 @@ export async function entrarComEmailESenha(email: string, senha: string, manterC
 
   try {
     const sessionTokenHash = hashToken(sessionToken);
-    const sessionId = generateToken();
+    const sessionId = randomUUID();
     await sql`UPDATE public.app_users SET last_sign_in_at = CURRENT_TIMESTAMP WHERE id = ${user.id}::uuid`;
     await sql`
       INSERT INTO public.user_sessions (id, user_id, session_token_hash, expires_at)
-      VALUES (${sessionId}, ${user.id}::uuid, ${sessionTokenHash}, ${expiresStr})
+      VALUES (${sessionId}::uuid, ${user.id}::uuid, ${sessionTokenHash}, ${expiresStr})
     `;
   } catch {
     // ignora se DB indisponível
@@ -420,6 +421,77 @@ export async function solicitarRecuperacaoSenha(email: string, redirectTo: strin
   }
 
   return { ok: true };
+}
+
+/**
+ * Permite auto-cadastro de novos usuários no sistema.
+ */
+export async function solicitarCadastro(
+  email: string,
+  nomeCompleto: string,
+  cargo: string | undefined,
+  redirectTo: string,
+) {
+  const rawEmail = email.trim().toLowerCase();
+  const nome = nomeCompleto.trim();
+  const funcao = (cargo || "Técnico Agronômico").trim();
+
+  // 1. Verificar se usuário já existe
+  const [userExistente] = await sql`
+    SELECT id::text, status::text FROM public.app_users WHERE lower(email::text) = ${rawEmail}
+  `;
+
+  if (userExistente && userExistente.status === "active") {
+    throw new Error("Este e-mail já possui uma conta ativa. Faça login diretamente.");
+  }
+
+  let userId: string;
+
+  if (userExistente) {
+    userId = userExistente.id;
+    await sql`
+      UPDATE public.app_users
+      SET nome_completo = ${nome}, cargo = ${funcao}
+      WHERE id = ${userId}::uuid
+    `;
+  } else {
+    userId = randomUUID();
+    await sql`
+      INSERT INTO public.app_users (id, email, nome_completo, cargo, status)
+      VALUES (${userId}::uuid, ${rawEmail}, ${nome}, ${funcao}, 'invited'::public.user_status)
+    `;
+
+    const roleId = randomUUID();
+    await sql`
+      INSERT INTO public.user_roles (id, user_id, role)
+      VALUES (${roleId}::uuid, ${userId}::uuid, 'tecnico'::public.user_role)
+      ON CONFLICT (user_id, role) DO NOTHING
+    `;
+  }
+
+  // Criar token de ativação na tabela de convites
+  const token = generateToken();
+  const tokenHash = hashToken(token);
+  const inviteId = randomUUID();
+  const expiresAt = new Date(Date.now() + 48 * 3600 * 1000); // 48 horas
+
+  await sql`
+    INSERT INTO public.user_invites (id, user_id, email, token_hash, expires_at)
+    VALUES (${inviteId}::uuid, ${userId}::uuid, ${rawEmail}, ${tokenHash}, ${expiresAt.toISOString()})
+  `;
+
+  const link = `${redirectTo}?token=${token}`;
+
+  await enviarEmailConvite({
+    toEmail: rawEmail,
+    nome,
+    link,
+  });
+
+  return {
+    ok: true,
+    message: "Cadastro solicitado com sucesso! Enviamos um e-mail com o link de ativação para você criar sua senha.",
+  };
 }
 
 function setCookieHeader(token: string, expiresAt: Date) {

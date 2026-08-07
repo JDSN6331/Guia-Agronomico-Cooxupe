@@ -6,6 +6,7 @@ import {
   encerrarSessao,
   entrarComEmailESenha,
   getSessionUser,
+  solicitarCadastro,
   solicitarRecuperacaoSenha,
   validarTokenConvite,
 } from "./auth.server";
@@ -61,4 +62,20 @@ export const solicitarRecuperacaoFn = createServerFn({ method: "POST" })
     const request = getRequest();
     const origem = request ? new URL(request.url).origin : "";
     return await solicitarRecuperacaoSenha(data.email, `${origem}/definir-senha`);
+  });
+
+export const solicitarCadastroFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) =>
+    z
+      .object({
+        nomeCompleto: z.string().trim().min(2, "Informe seu nome completo").max(120),
+        email: z.string().trim().email("Informe um e-mail válido").max(255),
+        cargo: z.string().trim().max(120).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const request = getRequest();
+    const origem = request ? new URL(request.url).origin : "";
+    return await solicitarCadastro(data.email, data.nomeCompleto, data.cargo, `${origem}/definir-senha`);
   });

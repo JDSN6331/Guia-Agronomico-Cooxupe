@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Leaf, Loader2, Lock, Mail, Moon, Shield, Sun } from "lucide-react";
+import { Briefcase, Eye, EyeOff, Leaf, Loader2, Lock, Mail, Moon, Shield, Sun, User } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Brand } from "@/components/brand";
 import { Label } from "@/components/ui/label";
-import { entrarFn, solicitarRecuperacaoFn } from "@/lib/auth.functions";
+import { entrarFn, solicitarCadastroFn, solicitarRecuperacaoFn } from "@/lib/auth.functions";
 import { useAuth } from "@/lib/auth";
 import { useTema } from "@/lib/theme";
 
@@ -39,12 +39,15 @@ function Login() {
   const navigate = useNavigate();
   const { session, carregando, recarregarSessao } = useAuth();
   const { tema, alternar } = useTema();
+  const [nomeCompleto, setNomeCompleto] = useState("");
+  const [cargo, setCargo] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [manterConectado, setManterConectado] = useState(true);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [enviando, setEnviando] = useState(false);
-  const [modo, setModo] = useState<"login" | "recuperar">("login");
+  const [modo, setModo] = useState<"login" | "cadastrar" | "recuperar">("login");
+  const [sucessoCadastro, setSucessoCadastro] = useState<string | null>(null);
 
   useEffect(() => {
     if (!carregando && session) void navigate({ to: "/inicio", replace: true });
@@ -77,6 +80,37 @@ function Login() {
           fontSize: "14px",
         },
       });
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  async function cadastrar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nomeCompleto.trim()) {
+      toast.error("Informe seu nome completo");
+      return;
+    }
+    const parsed = z.string().trim().email().safeParse(email);
+    if (!parsed.success) {
+      toast.error("Informe um e-mail válido");
+      return;
+    }
+    setEnviando(true);
+    setSucessoCadastro(null);
+    try {
+      const res = await solicitarCadastroFn({
+        data: {
+          nomeCompleto: nomeCompleto.trim(),
+          email: parsed.data,
+          cargo: cargo.trim() || undefined,
+        },
+      });
+      setSucessoCadastro(res.message);
+      toast.success("Cadastro solicitado! Verifique seu e-mail.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Não foi possível realizar o cadastro.";
+      toast.error(msg);
     } finally {
       setEnviando(false);
     }
@@ -211,11 +245,56 @@ function Login() {
             WebkitBackdropFilter: "blur(24px)",
           }}
         >
+          {/* Alternador de Modo (Entrar vs Criar conta) */}
+          {modo !== "recuperar" && (
+            <div
+              className="flex rounded-xl p-1 mb-6"
+              style={{ background: isDark ? "rgba(6, 22, 13, 0.6)" : "rgba(18,40,27,0.06)" }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setModo("login");
+                  setSucessoCadastro(null);
+                }}
+                className={`flex-1 rounded-lg py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                  modo === "login"
+                    ? "bg-[#2a6e42] text-white shadow-md"
+                    : isDark
+                    ? "text-emerald-300/70 hover:text-white"
+                    : "text-emerald-800/70 hover:text-emerald-900"
+                }`}
+              >
+                Entrar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setModo("cadastrar");
+                  setSucessoCadastro(null);
+                }}
+                className={`flex-1 rounded-lg py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                  modo === "cadastrar"
+                    ? "bg-[#2a6e42] text-white shadow-md"
+                    : isDark
+                    ? "text-emerald-300/70 hover:text-white"
+                    : "text-emerald-800/70 hover:text-emerald-900"
+                }`}
+              >
+                Criar conta
+              </button>
+            </div>
+          )}
+
           <h1
             className="text-center font-display text-[22px] font-bold tracking-tight"
             style={{ color: txt }}
           >
-            {modo === "login" ? "Acessar a plataforma" : "Recuperar acesso"}
+            {modo === "login"
+              ? "Acessar a plataforma"
+              : modo === "cadastrar"
+              ? "Criar sua conta"
+              : "Recuperar acesso"}
           </h1>
           <span
             className="mx-auto mt-3 block h-px w-16 rounded-full"
@@ -223,11 +302,52 @@ function Login() {
           />
           <p className="mt-3 text-center text-[13.5px] leading-relaxed" style={{ color: sub }}>
             {modo === "login"
-              ? "Use o e-mail corporativo cadastrado pelo administrador."
+              ? "Use o seu e-mail cadastrado e senha."
+              : modo === "cadastrar"
+              ? "Informe seus dados para receber o link de validação por e-mail."
               : "Enviaremos um link para você definir uma nova senha."}
           </p>
 
-          <form onSubmit={modo === "login" ? entrar : recuperar} className="mt-8 space-y-5">
+          {sucessoCadastro && (
+            <div className="mt-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-medium leading-relaxed text-emerald-300">
+              {sucessoCadastro}
+            </div>
+          )}
+
+          <form
+            onSubmit={modo === "login" ? entrar : modo === "cadastrar" ? cadastrar : recuperar}
+            className="mt-6 space-y-4"
+          >
+            {modo === "cadastrar" && (
+              <div className="space-y-2">
+                <Label htmlFor="nomeCompleto" className="text-[13px] font-medium" style={{ color: txt }}>
+                  Nome Completo
+                </Label>
+                <div className="relative">
+                  <User
+                    className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2"
+                    style={{ color: isDark ? "rgba(212,176,84,0.55)" : "rgba(18,40,27,0.35)" }}
+                  />
+                  <input
+                    id="nomeCompleto"
+                    type="text"
+                    className="flex h-11 w-full rounded-xl px-4 pl-10 text-sm outline-none transition-all focus:ring-2"
+                    style={{
+                      background: isDark ? "rgba(6, 22, 13, 0.7)" : "rgba(255,255,255,0.85)",
+                      border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(18,40,27,0.12)"}`,
+                      color: txt,
+                      ["--tw-ring-color" as string]: "rgba(212,176,84,0.45)",
+                    }}
+                    placeholder="Seu nome completo"
+                    value={nomeCompleto}
+                    onChange={(e) => setNomeCompleto(e.target.value)}
+                    maxLength={120}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[13px] font-medium" style={{ color: txt }}>
                 E-mail
@@ -256,6 +376,35 @@ function Login() {
                 />
               </div>
             </div>
+
+            {modo === "cadastrar" && (
+              <div className="space-y-2">
+                <Label htmlFor="cargo" className="text-[13px] font-medium" style={{ color: txt }}>
+                  Cargo / Função <span className="opacity-60 font-normal">(Opcional)</span>
+                </Label>
+                <div className="relative">
+                  <Briefcase
+                    className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2"
+                    style={{ color: isDark ? "rgba(212,176,84,0.55)" : "rgba(18,40,27,0.35)" }}
+                  />
+                  <input
+                    id="cargo"
+                    type="text"
+                    className="flex h-11 w-full rounded-xl px-4 pl-10 text-sm outline-none transition-all focus:ring-2"
+                    style={{
+                      background: isDark ? "rgba(6, 22, 13, 0.7)" : "rgba(255,255,255,0.85)",
+                      border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(18,40,27,0.12)"}`,
+                      color: txt,
+                      ["--tw-ring-color" as string]: "rgba(212,176,84,0.45)",
+                    }}
+                    placeholder="Ex: Técnico Agronômico"
+                    value={cargo}
+                    onChange={(e) => setCargo(e.target.value)}
+                    maxLength={120}
+                  />
+                </div>
+              </div>
+            )}
 
             {modo === "login" && (
               <div className="space-y-2">
@@ -315,25 +464,43 @@ function Login() {
             <button
               type="submit"
               disabled={enviando}
-              className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
+              className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 mt-2"
               style={{
                 background: "linear-gradient(135deg, #4aa367 0%, #2a6e42 100%)",
                 boxShadow: "0 6px 20px rgba(42,110,66,0.35)",
               }}
             >
               {enviando && <Loader2 className="size-4 animate-spin" />}
-              {modo === "login" ? "Entrar" : "Enviar link de recuperação"}
+              {modo === "login"
+                ? "Entrar"
+                : modo === "cadastrar"
+                ? "Enviar link de validação"
+                : "Enviar link de recuperação"}
             </button>
           </form>
 
-          <button
-            type="button"
-            onClick={() => setModo(modo === "login" ? "recuperar" : "login")}
-            className="mt-5 w-full cursor-pointer text-center text-sm font-medium transition-colors hover:brightness-110"
-            style={{ color: isDark ? GOLD : "#2a6e42" }}
-          >
-            {modo === "login" ? "Esqueci minha senha" : "Voltar para o login"}
-          </button>
+          {modo === "login" ? (
+            <button
+              type="button"
+              onClick={() => setModo("recuperar")}
+              className="mt-5 w-full cursor-pointer text-center text-sm font-medium transition-colors hover:brightness-110"
+              style={{ color: isDark ? GOLD : "#2a6e42" }}
+            >
+              Esqueci minha senha
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setModo("login");
+                setSucessoCadastro(null);
+              }}
+              className="mt-5 w-full cursor-pointer text-center text-sm font-medium transition-colors hover:brightness-110"
+              style={{ color: isDark ? GOLD : "#2a6e42" }}
+            >
+              Já possui uma conta? Voltar para o login
+            </button>
+          )}
 
           <div
             className="mt-8 flex items-start gap-3 rounded-xl p-4"
@@ -344,8 +511,7 @@ function Login() {
           >
             <Shield className="mt-0.5 size-4 shrink-0" style={{ color: GOLD }} />
             <p className="text-[12px] leading-relaxed" style={{ color: sub }}>
-              O acesso é criado por um administrador. Você recebe um convite por e-mail e define sua
-              própria senha no primeiro acesso.
+              Ao se cadastrar, você receberá um e-mail com o link de validação para criar sua senha e ativar o acesso.
             </p>
           </div>
         </div>
