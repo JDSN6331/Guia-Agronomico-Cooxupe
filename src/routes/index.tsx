@@ -111,6 +111,9 @@ function Login() {
       });
       setSucessoCadastro(res.message);
       setModo("ativar");
+      setCodigoAtivacao("");
+      setNovaSenha("");
+      setConfirmarSenha("");
       toast.success("Solicitação enviada ao Administrador!");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Não foi possível realizar o cadastro.";
@@ -300,6 +303,9 @@ function Login() {
                 onClick={() => {
                   setModo("login");
                   setSucessoCadastro(null);
+                  setCodigoAtivacao("");
+                  setNovaSenha("");
+                  setConfirmarSenha("");
                 }}
                 className={`flex-1 rounded-lg py-2.5 text-xs font-bold transition-all cursor-pointer ${
                   modo === "login"
@@ -316,6 +322,9 @@ function Login() {
                 onClick={() => {
                   setModo("cadastrar");
                   setSucessoCadastro(null);
+                  setCodigoAtivacao("");
+                  setNovaSenha("");
+                  setConfirmarSenha("");
                 }}
                 className={`flex-1 rounded-lg py-2.5 text-xs font-bold transition-all cursor-pointer ${
                   modo === "cadastrar"
@@ -331,6 +340,9 @@ function Login() {
                 type="button"
                 onClick={() => {
                   setModo("ativar");
+                  setCodigoAtivacao("");
+                  setNovaSenha("");
+                  setConfirmarSenha("");
                 }}
                 className={`flex-1 rounded-lg py-2.5 text-xs font-bold transition-all cursor-pointer ${
                   modo === "ativar"
@@ -492,6 +504,7 @@ function Login() {
                       id="codigoAtivacao"
                       type="text"
                       inputMode="numeric"
+                      autoComplete="off"
                       className="flex h-11 w-full rounded-xl px-4 pl-10 tracking-widest text-base font-bold outline-none transition-all focus:ring-2"
                       style={{
                         background: isDark ? "rgba(6, 22, 13, 0.7)" : "rgba(255,255,255,0.85)",
@@ -499,7 +512,7 @@ function Login() {
                         color: txt,
                         ["--tw-ring-color" as string]: "rgba(212,176,84,0.45)",
                       }}
-                      placeholder="849201"
+                      placeholder="Código de 6 dígitos"
                       value={codigoAtivacao}
                       onChange={(e) => setCodigoAtivacao(e.target.value)}
                       maxLength={10}
@@ -520,6 +533,7 @@ function Login() {
                     <input
                       id="novaSenha"
                       type="password"
+                      autoComplete="new-password"
                       className="flex h-11 w-full rounded-xl px-4 pl-10 text-sm outline-none transition-all focus:ring-2"
                       style={{
                         background: isDark ? "rgba(6, 22, 13, 0.7)" : "rgba(255,255,255,0.85)",
@@ -548,6 +562,7 @@ function Login() {
                     <input
                       id="confirmarSenha"
                       type="password"
+                      autoComplete="new-password"
                       className="flex h-11 w-full rounded-xl px-4 pl-10 text-sm outline-none transition-all focus:ring-2"
                       style={{
                         background: isDark ? "rgba(6, 22, 13, 0.7)" : "rgba(255,255,255,0.85)",
@@ -555,7 +570,7 @@ function Login() {
                         color: txt,
                         ["--tw-ring-color" as string]: "rgba(212,176,84,0.45)",
                       }}
-                      placeholder="Repita a senha"
+                      placeholder="Repita a nova senha"
                       value={confirmarSenha}
                       onChange={(e) => setConfirmarSenha(e.target.value)}
                       maxLength={72}
