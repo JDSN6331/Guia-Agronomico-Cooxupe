@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Briefcase, Eye, EyeOff, Leaf, Loader2, Lock, Mail, Moon, Shield, Sun, User } from "lucide-react";
+import { Briefcase, Eye, EyeOff, KeyRound, Leaf, Loader2, Lock, Mail, Moon, Shield, Sun, User } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Brand } from "@/components/brand";
 import { Label } from "@/components/ui/label";
-import { entrarFn, solicitarCadastroFn, solicitarRecuperacaoFn } from "@/lib/auth.functions";
+import { ativarContaComCodigoFn, entrarFn, solicitarCadastroFn, solicitarRecuperacaoFn } from "@/lib/auth.functions";
 import { useAuth } from "@/lib/auth";
 import { useTema } from "@/lib/theme";
 
@@ -43,10 +43,13 @@ function Login() {
   const [cargo, setCargo] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [codigoAtivacao, setCodigoAtivacao] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
   const [manterConectado, setManterConectado] = useState(true);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [enviando, setEnviando] = useState(false);
-  const [modo, setModo] = useState<"login" | "cadastrar" | "recuperar">("login");
+  const [modo, setModo] = useState<"login" | "cadastrar" | "ativar" | "recuperar">("login");
   const [sucessoCadastro, setSucessoCadastro] = useState<string | null>(null);
 
   useEffect(() => {
@@ -107,9 +110,50 @@ function Login() {
         },
       });
       setSucessoCadastro(res.message);
-      toast.success("Cadastro solicitado! Verifique seu e-mail.");
+      setModo("ativar");
+      toast.success("Solicitação enviada ao Administrador!");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Não foi possível realizar o cadastro.";
+      toast.error(msg);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  async function ativarConta(e: React.FormEvent) {
+    e.preventDefault();
+    const emailParsed = z.string().trim().email().safeParse(email);
+    if (!emailParsed.success) {
+      toast.error("Informe um e-mail válido");
+      return;
+    }
+    if (codigoAtivacao.trim().length < 6) {
+      toast.error("Informe o código de ativação de 6 dígitos");
+      return;
+    }
+    if (novaSenha.length < 8) {
+      toast.error("A senha deve ter no mínimo 8 caracteres");
+      return;
+    }
+    if (novaSenha !== confirmarSenha) {
+      toast.error("As senhas não coincidem");
+      return;
+    }
+
+    setEnviando(true);
+    try {
+      await ativarContaComCodigoFn({
+        data: {
+          email: emailParsed.data,
+          codigo: codigoAtivacao.trim(),
+          senha: novaSenha,
+        },
+      });
+      await recarregarSessao();
+      toast.success("Conta ativada com sucesso! Bem-vindo!");
+      await navigate({ to: "/inicio", replace: true });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Código de ativação inválido.";
       toast.error(msg);
     } finally {
       setEnviando(false);
@@ -245,10 +289,10 @@ function Login() {
             WebkitBackdropFilter: "blur(24px)",
           }}
         >
-          {/* Alternador de Modo (Entrar vs Criar conta) */}
+          {/* Alternador de Modo (Entrar vs Criar conta vs Ativar) */}
           {modo !== "recuperar" && (
             <div
-              className="flex rounded-xl p-1 mb-6"
+              className="flex rounded-xl p-1 mb-6 text-center"
               style={{ background: isDark ? "rgba(6, 22, 13, 0.6)" : "rgba(18,40,27,0.06)" }}
             >
               <button
@@ -283,6 +327,21 @@ function Login() {
               >
                 Criar conta
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setModo("ativar");
+                }}
+                className={`flex-1 rounded-lg py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                  modo === "ativar"
+                    ? "bg-[#2a6e42] text-white shadow-md"
+                    : isDark
+                    ? "text-emerald-300/70 hover:text-white"
+                    : "text-emerald-800/70 hover:text-emerald-900"
+                }`}
+              >
+                Ativar conta
+              </button>
             </div>
           )}
 
@@ -294,6 +353,8 @@ function Login() {
               ? "Acessar a plataforma"
               : modo === "cadastrar"
               ? "Criar sua conta"
+              : modo === "ativar"
+              ? "Ativar conta com Código"
               : "Recuperar acesso"}
           </h1>
           <span
@@ -304,7 +365,9 @@ function Login() {
             {modo === "login"
               ? "Use o seu e-mail cadastrado e senha."
               : modo === "cadastrar"
-              ? "Informe seus dados para receber o link de validação por e-mail."
+              ? "Preencha seus dados para solicitar o código de ativação ao administrador."
+              : modo === "ativar"
+              ? "Informe o código de 6 dígitos fornecido pelo Administrador para criar sua senha."
               : "Enviaremos um link para você definir uma nova senha."}
           </p>
 
@@ -315,7 +378,15 @@ function Login() {
           )}
 
           <form
-            onSubmit={modo === "login" ? entrar : modo === "cadastrar" ? cadastrar : recuperar}
+            onSubmit={
+              modo === "login"
+                ? entrar
+                : modo === "cadastrar"
+                ? cadastrar
+                : modo === "ativar"
+                ? ativarConta
+                : recuperar
+            }
             className="mt-6 space-y-4"
           >
             {modo === "cadastrar" && (
@@ -406,6 +477,95 @@ function Login() {
               </div>
             )}
 
+            {modo === "ativar" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="codigoAtivacao" className="text-[13px] font-medium" style={{ color: txt }}>
+                    Código de Ativação (6 dígitos)
+                  </Label>
+                  <div className="relative">
+                    <KeyRound
+                      className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2"
+                      style={{ color: isDark ? "rgba(212,176,84,0.55)" : "rgba(18,40,27,0.35)" }}
+                    />
+                    <input
+                      id="codigoAtivacao"
+                      type="text"
+                      inputMode="numeric"
+                      className="flex h-11 w-full rounded-xl px-4 pl-10 tracking-widest text-base font-bold outline-none transition-all focus:ring-2"
+                      style={{
+                        background: isDark ? "rgba(6, 22, 13, 0.7)" : "rgba(255,255,255,0.85)",
+                        border: `1px solid ${isDark ? "rgba(212,176,84,0.3)" : "rgba(18,40,27,0.2)"}`,
+                        color: txt,
+                        ["--tw-ring-color" as string]: "rgba(212,176,84,0.45)",
+                      }}
+                      placeholder="849201"
+                      value={codigoAtivacao}
+                      onChange={(e) => setCodigoAtivacao(e.target.value)}
+                      maxLength={10}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="novaSenha" className="text-[13px] font-medium" style={{ color: txt }}>
+                    Criar Nova Senha
+                  </Label>
+                  <div className="relative">
+                    <Lock
+                      className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2"
+                      style={{ color: isDark ? "rgba(212,176,84,0.55)" : "rgba(18,40,27,0.35)" }}
+                    />
+                    <input
+                      id="novaSenha"
+                      type="password"
+                      className="flex h-11 w-full rounded-xl px-4 pl-10 text-sm outline-none transition-all focus:ring-2"
+                      style={{
+                        background: isDark ? "rgba(6, 22, 13, 0.7)" : "rgba(255,255,255,0.85)",
+                        border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(18,40,27,0.12)"}`,
+                        color: txt,
+                        ["--tw-ring-color" as string]: "rgba(212,176,84,0.45)",
+                      }}
+                      placeholder="Mínimo 8 caracteres"
+                      value={novaSenha}
+                      onChange={(e) => setNovaSenha(e.target.value)}
+                      maxLength={72}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmarSenha" className="text-[13px] font-medium" style={{ color: txt }}>
+                    Confirmar Senha
+                  </Label>
+                  <div className="relative">
+                    <Lock
+                      className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2"
+                      style={{ color: isDark ? "rgba(212,176,84,0.55)" : "rgba(18,40,27,0.35)" }}
+                    />
+                    <input
+                      id="confirmarSenha"
+                      type="password"
+                      className="flex h-11 w-full rounded-xl px-4 pl-10 text-sm outline-none transition-all focus:ring-2"
+                      style={{
+                        background: isDark ? "rgba(6, 22, 13, 0.7)" : "rgba(255,255,255,0.85)",
+                        border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(18,40,27,0.12)"}`,
+                        color: txt,
+                        ["--tw-ring-color" as string]: "rgba(212,176,84,0.45)",
+                      }}
+                      placeholder="Repita a senha"
+                      value={confirmarSenha}
+                      onChange={(e) => setConfirmarSenha(e.target.value)}
+                      maxLength={72}
+                      required
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
             {modo === "login" && (
               <div className="space-y-2">
                 <Label htmlFor="senha" className="text-[13px] font-medium" style={{ color: txt }}>
@@ -474,20 +634,32 @@ function Login() {
               {modo === "login"
                 ? "Entrar"
                 : modo === "cadastrar"
-                ? "Enviar link de validação"
+                ? "Solicitar Código ao Admin"
+                : modo === "ativar"
+                ? "Ativar conta e Entrar"
                 : "Enviar link de recuperação"}
             </button>
           </form>
 
           {modo === "login" ? (
-            <button
-              type="button"
-              onClick={() => setModo("recuperar")}
-              className="mt-5 w-full cursor-pointer text-center text-sm font-medium transition-colors hover:brightness-110"
-              style={{ color: isDark ? GOLD : "#2a6e42" }}
-            >
-              Esqueci minha senha
-            </button>
+            <div className="mt-5 space-y-2 text-center">
+              <button
+                type="button"
+                onClick={() => setModo("recuperar")}
+                className="block w-full cursor-pointer text-center text-sm font-medium transition-colors hover:brightness-110"
+                style={{ color: isDark ? GOLD : "#2a6e42" }}
+              >
+                Esqueci minha senha
+              </button>
+              <button
+                type="button"
+                onClick={() => setModo("ativar")}
+                className="block w-full cursor-pointer text-center text-xs font-medium transition-colors opacity-80 hover:opacity-100 hover:underline"
+                style={{ color: isDark ? GOLD : "#2a6e42" }}
+              >
+                Possui um Código de Ativação? Ative sua conta aqui
+              </button>
+            </div>
           ) : (
             <button
               type="button"
@@ -498,7 +670,7 @@ function Login() {
               className="mt-5 w-full cursor-pointer text-center text-sm font-medium transition-colors hover:brightness-110"
               style={{ color: isDark ? GOLD : "#2a6e42" }}
             >
-              Já possui uma conta? Voltar para o login
+              Já possui uma conta ativa? Voltar para o login
             </button>
           )}
 
@@ -511,7 +683,9 @@ function Login() {
           >
             <Shield className="mt-0.5 size-4 shrink-0" style={{ color: GOLD }} />
             <p className="text-[12px] leading-relaxed" style={{ color: sub }}>
-              Ao se cadastrar, você receberá um e-mail com o link de validação para criar sua senha e ativar o acesso.
+              {modo === "ativar"
+                ? "Informe o código de 6 dígitos enviado ao e-mail do Administrador para criar sua senha."
+                : "Solicite o cadastro para receber o Código de Ativação de 6 dígitos liberado pelo Administrador."}
             </p>
           </div>
         </div>

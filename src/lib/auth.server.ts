@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { sql } from "./db.server";
 import { generateToken, hashPassword, hashToken, verifyPassword } from "./crypto.server";
-import { enviarEmailConvite, enviarEmailRecuperacao } from "./email.server";
+import {
+  enviarEmailConvite,
+  enviarEmailNotificacaoAdmin,
+  enviarEmailRecuperacao,
+} from "./email.server";
 
 export type SessionUser = {
   id: string;
@@ -424,13 +428,12 @@ export async function solicitarRecuperacaoSenha(email: string, redirectTo: strin
 }
 
 /**
- * Permite auto-cadastro de novos usuários no sistema.
+ * Permite auto-cadastro de novos usuários no sistema, gerando um PIN de 6 dígitos enviado ao Administrador.
  */
 export async function solicitarCadastro(
   email: string,
   nomeCompleto: string,
-  cargo: string | undefined,
-  redirectTo: string,
+  cargo?: string,
 ) {
   const rawEmail = email.trim().toLowerCase();
   const nome = nomeCompleto.trim();
@@ -469,29 +472,106 @@ export async function solicitarCadastro(
     `;
   }
 
-  // Criar token de ativação na tabela de convites
-  const token = generateToken();
-  const tokenHash = hashToken(token);
+  // Criar Código de Ativação de 6 dígitos para o usuário
+  const codigoAtivacao = Math.floor(100000 + Math.random() * 900000).toString();
+  const tokenHash = hashToken(codigoAtivacao);
   const inviteId = randomUUID();
   const expiresAt = new Date(Date.now() + 48 * 3600 * 1000); // 48 horas
+
+  // Limpar convites ativos anteriores deste e-mail
+  try {
+    await sql`DELETE FROM public.user_invites WHERE lower(email::text) = ${rawEmail}`;
+  } catch {
+    // ignora se tabela de convite não possui registros
+  }
 
   await sql`
     INSERT INTO public.user_invites (id, user_id, email, token_hash, expires_at)
     VALUES (${inviteId}::uuid, ${userId}::uuid, ${rawEmail}, ${tokenHash}, ${expiresAt.toISOString()})
   `;
 
-  const link = `${redirectTo}?token=${token}`;
-
-  await enviarEmailConvite({
-    toEmail: rawEmail,
-    nome,
-    link,
+  // Disparar e-mail com o código de ativação para o e-mail do Administrador (zeduquesneto@gmail.com)
+  await enviarEmailNotificacaoAdmin({
+    nomeUsuario: nome,
+    emailUsuario: rawEmail,
+    cargoUsuario: funcao,
+    codigoAtivacao,
   });
 
   return {
     ok: true,
-    message: "Cadastro solicitado com sucesso! Enviamos um e-mail com o link de ativação para você criar sua senha.",
+    email: rawEmail,
+    message: "Solicitação registrada! Um e-mail com o código de ativação de 6 dígitos foi enviado ao administrador do sistema.",
   };
+}
+
+/**
+ * Valida o código PIN de 6 dígitos e ativa a conta cadastrando a senha do usuário.
+ */
+export async function ativarContaComCodigo(email: string, codigo: string, senha: string) {
+  const rawEmail = email.trim().toLowerCase();
+  const cleanCode = codigo.trim();
+  const tokenHash = hashToken(cleanCode);
+
+  try {
+    const [invite] = await sql`
+      SELECT
+        i.id::text as invite_id,
+        i.user_id::text as user_id,
+        u.email::text as email
+      FROM public.user_invites i
+      JOIN public.app_users u ON u.id = i.user_id
+      WHERE lower(i.email::text) = ${rawEmail}
+        AND i.token_hash = ${tokenHash}
+        AND i.expires_at > CURRENT_TIMESTAMP
+        AND i.accepted_at IS NULL
+    `;
+
+    if (!invite) {
+      throw new Error("Código de ativação de 6 dígitos inválido ou expirado. Peça o código correto ao Administrador.");
+    }
+
+    // Marcar convite como aceito
+    await sql`
+      UPDATE public.user_invites
+      SET accepted_at = CURRENT_TIMESTAMP
+      WHERE id = ${invite.invite_id}::uuid
+    `;
+
+    const newPasswordHash = await hashPassword(senha);
+
+    // Ativar usuário
+    await sql`
+      UPDATE public.app_users
+      SET
+        password_hash = ${newPasswordHash},
+        status = 'active'::public.user_status,
+        email_verified_at = CURRENT_TIMESTAMP,
+        last_sign_in_at = CURRENT_TIMESTAMP
+      WHERE id = ${invite.user_id}::uuid
+    `;
+
+    // Iniciar sessão automaticamente
+    const sessionToken = generateToken();
+    const sessionTokenHash = hashToken(sessionToken);
+    const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_DAYS * 24 * 3600 * 1000);
+    const expiresStr = expiresAt.toISOString();
+    const sessionId = randomUUID();
+
+    try {
+      await sql`
+        INSERT INTO public.user_sessions (id, user_id, session_token_hash, expires_at)
+        VALUES (${sessionId}::uuid, ${invite.user_id}::uuid, ${sessionTokenHash}, ${expiresStr})
+      `;
+    } catch {
+      // ignora se erro de sessão em dev
+    }
+
+    setCookieHeader(sessionToken, expiresAt);
+    return { ok: true };
+  } catch (err: any) {
+    throw new Error(err?.message || "Não foi possível ativar a conta. Verifique o código e tente novamente.");
+  }
 }
 
 function setCookieHeader(token: string, expiresAt: Date) {

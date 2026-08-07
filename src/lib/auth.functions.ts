@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import {
+  ativarContaComCodigo,
   definirSenhaComToken,
   encerrarSessao,
   entrarComEmailESenha,
@@ -75,7 +76,19 @@ export const solicitarCadastroFn = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const request = getRequest();
-    const origem = request ? new URL(request.url).origin : "";
-    return await solicitarCadastro(data.email, data.nomeCompleto, data.cargo, `${origem}/definir-senha`);
+    return await solicitarCadastro(data.email, data.nomeCompleto, data.cargo);
+  });
+
+export const ativarContaComCodigoFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) =>
+    z
+      .object({
+        email: z.string().trim().email("E-mail inválido").max(255),
+        codigo: z.string().trim().min(6, "Informe o código de 6 dígitos").max(10),
+        senha: z.string().min(8, "A senha deve ter no mínimo 8 caracteres").max(72),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    return await ativarContaComCodigo(data.email, data.codigo, data.senha);
   });
