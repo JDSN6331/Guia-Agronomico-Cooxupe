@@ -12,13 +12,13 @@ import { useTema } from "@/lib/theme";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Entrar | Guia Agronômico Cooxupé" },
+      { title: "Entrar | Guia Agronômico AgroBase" },
       {
         name: "description",
         content:
-          "Acesso restrito ao time de Desenvolvimento Técnico Cooxupé. Consulte produtos, dosagens e o calendário de manejo.",
+          "Acesso restrito ao time de Desenvolvimento Técnico AgroBase. Consulte produtos, dosagens e o calendário de manejo.",
       },
-      { property: "og:title", content: "Entrar | Guia Agronômico Cooxupé" },
+      { property: "og:title", content: "Entrar | Guia Agronômico AgroBase" },
       {
         property: "og:description",
         content: "Base de conhecimento técnica de Café, Milho e Soja.",
@@ -241,7 +241,7 @@ function Login() {
         <div className="relative z-10 flex flex-1 flex-col justify-center">
           <img
             src="/logo.png"
-            alt="Guia Agronômico Cooxupé"
+            alt="Guia Agronômico AgroBase"
             className="h-52 w-auto self-start object-contain object-left drop-shadow-2xl xl:h-60"
           />
 

@@ -1,7 +1,7 @@
 {
   "short_name": "Guia Agronômico",
-  "name": "Guia Agronômico — Cooxupé",
-  "description": "Base de Conhecimento Técnica do Desenvolvimento Técnico Cooxupé. Consulte produtos, dosagens e calendário de manejo mesmo sem conexão de internet.",
+  "name": "Guia Agronômico — AgroBase",
+  "description": "Base de Conhecimento Técnica do Desenvolvimento Técnico AgroBase. Consulte produtos, dosagens e calendário de manejo mesmo sem conexão de internet.",
   "icons": [
     {
       "src": "/favicon.ico",

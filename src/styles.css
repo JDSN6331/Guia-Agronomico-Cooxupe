@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Guia Agronômico Cooxupé - Design System Elegante com Dourado Agronômico & Verde Campo Profundo
+ * Guia Agronômico AgroBase - Design System Elegante com Dourado Agronômico & Verde Campo Profundo
  */
 
 @theme inline {
@@ -72,7 +72,7 @@
   --popover: #ffffff;
   --popover-foreground: #12281b;
 
-  /* Verde Campo Cooxupé */
+  /* Verde Campo AgroBase */
   --primary: #1c5c36;
   --primary-foreground: #ffffff;
 
@@ -91,7 +91,7 @@
   --terra: #c86432;
   --terra-foreground: #ffffff;
 
-  /* Dourado Nobre Cooxupé */
+  /* Dourado Nobre AgroBase */
   --gold: #bfa043;
   --gold-foreground: #12281b;
 

@@ -15,8 +15,8 @@ export function Brand({
       <div className="relative shrink-0 flex items-center justify-center">
         <img
           src="/logo.png"
-          alt="Guia Agronômico Cooxupé"
-          style={{ width: tamanhoLogo, height: tamanhoLogo }}
+          alt="Guia Agronômico AgroBase"
+          style={{ height: tamanhoLogo, width: "auto" }}
           className="object-contain drop-shadow-sm transition-transform hover:scale-105"
         />
       </div>
@@ -26,7 +26,7 @@ export function Brand({
             {APP.nome}
           </span>
           <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-gold mt-0.5">
-            Cooxupé
+            AgroBase
           </span>
         </div>
       )}

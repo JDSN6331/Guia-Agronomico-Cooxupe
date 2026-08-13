@@ -356,7 +356,7 @@ function PaginaGestaoSistema() {
                   <div>
                     <h3 className="font-display text-base font-bold">Base Agronômica em Uso</h3>
                     <p className="text-xs text-muted-foreground">
-                      {programaAtual.versao || "Programa de Manejo Cooxupé (Oficial 2026)"}
+                      {programaAtual.versao || "Programa de Manejo AgroBase (Oficial 2026)"}
                     </p>
                   </div>
                 </div>

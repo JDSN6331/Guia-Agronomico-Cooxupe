@@ -267,7 +267,7 @@ export function AppShell({
         <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 pb-24 lg:pb-8 flex flex-col">
           <div className="flex-1">{children}</div>
           <footer className="mt-12 pt-4 border-t border-border/40 text-center text-xs text-muted-foreground/80 space-y-1">
-            <p className="font-semibold text-foreground">Guia Agronômico Cooxupé</p>
+            <p className="font-semibold text-foreground">Guia Agronômico AgroBase</p>
             <p className="text-[11px]">Desenvolvido pelo Time de Inteligência de Mercado - Comercial Insumos</p>
           </footer>
         </main>

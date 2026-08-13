@@ -13,7 +13,7 @@ export function exportarProgramaParaExcel(programa: ProgramaData, nomeArquivoCus
   const linhas: string[] = [];
 
   // Seção 1: CATÁLOGO CAFÉ
-  linhas.push("PROGRAMA DE MANEJO COOXUPÉ - CATÁLOGO CAFÉ");
+  linhas.push("PROGRAMA DE MANEJO AGROBASE - CATÁLOGO CAFÉ");
   linhas.push(
     [
       "ID",
@@ -62,7 +62,7 @@ export function exportarProgramaParaExcel(programa: ProgramaData, nomeArquivoCus
   linhas.push("");
 
   // Seção 2: MILHO E SOJA
-  linhas.push("PROGRAMA DE MANEJO COOXUPÉ - MILHO E SOJA");
+  linhas.push("PROGRAMA DE MANEJO AGROBASE - MILHO E SOJA");
   linhas.push(
     [
       "ID",
@@ -106,7 +106,7 @@ export function exportarProgramaParaExcel(programa: ProgramaData, nomeArquivoCus
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = nomeArquivoCustomizado || `Programa_Manejo_Cooxupe_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = nomeArquivoCustomizado || `Programa_Manejo_AgroBase_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

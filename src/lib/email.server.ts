@@ -31,13 +31,13 @@ export async function enviarEmailConvite(input: {
   link: string;
 }): Promise<boolean> {
   const transporter = await getTransporter();
-  const from = process.env["SMTP_FROM"] || "Guia Agronômico Cooxupé <nao-responder@cooxupe.com.br>";
-  const subject = "Convite de acesso | Guia Agronômico Cooxupé";
+  const from = process.env["SMTP_FROM"] || "Guia Agronômico AgroBase <nao-responder@cooxupe.com.br>";
+  const subject = "Convite de acesso | Guia Agronômico AgroBase";
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #12281b; background-color: #f9fbf9; border-radius: 12px; border: 1px solid #e1e9e3;">
-      <h2 style="color: #2a6e42; margin-top: 0;">Bem-vindo ao Guia Agronômico Cooxupé</h2>
+      <h2 style="color: #2a6e42; margin-top: 0;">Bem-vindo ao Guia Agronômico AgroBase</h2>
       <p>Olá, <strong>${input.nome}</strong>!</p>
-      <p>Você foi convidado para acessar a plataforma de Desenvolvimento Técnico Cooxupé.</p>
+      <p>Você foi convidado para acessar a plataforma de Desenvolvimento Técnico AgroBase.</p>
       <p>Para concluir o seu cadastro e criar a sua senha de acesso, clique no botão abaixo:</p>
       <div style="text-align: center; margin: 30px 0;">
         <a href="${input.link}" style="background-color: #2a6e42; color: #ffffff; padding: 12px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Definir Minha Senha</a>
@@ -76,12 +76,12 @@ export async function enviarEmailRecuperacao(input: {
   link: string;
 }): Promise<boolean> {
   const transporter = await getTransporter();
-  const from = process.env["SMTP_FROM"] || "Guia Agronômico Cooxupé <nao-responder@cooxupe.com.br>";
-  const subject = "Recuperação de Acesso | Guia Agronômico Cooxupé";
+  const from = process.env["SMTP_FROM"] || "Guia Agronômico AgroBase <nao-responder@cooxupe.com.br>";
+  const subject = "Recuperação de Acesso | Guia Agronômico AgroBase";
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #12281b; background-color: #f9fbf9; border-radius: 12px; border: 1px solid #e1e9e3;">
       <h2 style="color: #2a6e42; margin-top: 0;">Recuperação de Senha</h2>
-      <p>Recebemos uma solicitação para redefinir a sua senha no Guia Agronômico Cooxupé.</p>
+      <p>Recebemos uma solicitação para redefinir a sua senha no Guia Agronômico AgroBase.</p>
       <p>Clique no botão abaixo para definir uma nova senha:</p>
       <div style="text-align: center; margin: 30px 0;">
         <a href="${input.link}" style="background-color: #2a6e42; color: #ffffff; padding: 12px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Redefinir Senha</a>
@@ -122,13 +122,13 @@ export async function enviarEmailNotificacaoAdmin(input: {
   codigoAtivacao: string;
 }): Promise<boolean> {
   const transporter = await getTransporter();
-  const from = process.env["SMTP_FROM"] || "Guia Agronômico Cooxupé <onboarding@resend.dev>";
+  const from = process.env["SMTP_FROM"] || "Guia Agronômico AgroBase <onboarding@resend.dev>";
   const toAdmin = process.env["ADMIN_NOTIFY_EMAIL"] || "zeduquesneto@gmail.com";
-  const subject = `[Solicitação de Acesso] ${input.nomeUsuario} | Guia Agronômico Cooxupé`;
+  const subject = `[Solicitação de Acesso] ${input.nomeUsuario} | Guia Agronômico AgroBase`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #12281b; background-color: #f9fbf9; border-radius: 14px; border: 1px solid #e1e9e3;">
       <h2 style="color: #2a6e42; margin-top: 0;">Nova Solicitação de Cadastro</h2>
-      <p>Um novo usuário solicitou acesso ao <strong>Guia Agronômico Cooxupé</strong>:</p>
+      <p>Um novo usuário solicitou acesso ao <strong>Guia Agronômico AgroBase</strong>:</p>
       
       <div style="background-color: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0; margin: 20px 0;">
         <p style="margin: 4px 0;"><strong>Nome:</strong> ${input.nomeUsuario}</p>
@@ -144,7 +144,7 @@ export async function enviarEmailNotificacaoAdmin(input: {
 
       <p style="font-size: 13px; color: #555;">Repasse o código acima para o usuário. Ele deverá informar este código e criar a senha dele na plataforma para ativar a conta.</p>
       <hr style="border: 0; border-top: 1px solid #e1e9e3; margin: 25px 0;" />
-      <p style="font-size: 12px; color: #888;">Painel de Administração do Guia Agronômico Cooxupé.</p>
+      <p style="font-size: 12px; color: #888;">Painel de Administração do Guia Agronômico AgroBase.</p>
     </div>
   `;
 

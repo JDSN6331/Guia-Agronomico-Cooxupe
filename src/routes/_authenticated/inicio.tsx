@@ -15,16 +15,16 @@ import {
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
     meta: [
-      { title: "Início | Guia Agronômico Cooxupé" },
+      { title: "Início | Guia Agronômico AgroBase" },
       {
         name: "description",
         content:
-          "Painel inicial da base de conhecimento: catálogos de Café, Milho e Soja, famílias de produtos, calculadora de dosagem e calendário de manejo do Guia Agronômico Cooxupé.",
+          "Painel inicial da base de conhecimento: catálogos de Café, Milho e Soja, famílias de produtos, calculadora de dosagem e calendário de manejo do Guia Agronômico AgroBase.",
       },
-      { property: "og:title", content: "Início | Guia Agronômico Cooxupé" },
+      { property: "og:title", content: "Início | Guia Agronômico AgroBase" },
       {
         property: "og:description",
-        content: "Painel inicial da base de conhecimento técnico Cooxupé.",
+        content: "Painel inicial da base de conhecimento técnico AgroBase.",
       },
     ],
   }),
@@ -130,7 +130,7 @@ function Inicio() {
               </p>
 
               <div className="mt-4 rounded-xl border border-[#d4b054]/40 bg-[#d4b054]/15 p-3.5 text-xs sm:text-sm text-[#d4b054] font-medium leading-relaxed">
-                <p className="font-bold text-white">Base de Conhecimento Técnico Cooxupé</p>
+                <p className="font-bold text-white">Base de Conhecimento Técnico AgroBase</p>
                 <p className="mt-0.5 opacity-90 text-emerald-100">
                   Consulte sempre a bula oficial e o receituário agronômico antes da aplicação.
                 </p>
@@ -154,7 +154,7 @@ function Inicio() {
 
             <img
               src="/logo.png"
-              alt="Guia Agronômico Cooxupé"
+              alt="Guia Agronômico AgroBase"
               className="size-32 shrink-0 object-contain drop-shadow-2xl sm:size-44"
             />
           </div>

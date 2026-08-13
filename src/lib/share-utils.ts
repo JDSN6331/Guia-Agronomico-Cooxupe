@@ -17,7 +17,7 @@ export type DadosFichaProduto = {
 
 export function formatarTextoRecomendacao(p: DadosFichaProduto): string {
   const linhas: string[] = [
-    `🌱 *RECOMENDAÇÃO TÉCNICA - GUIA AGRONÔMICO COOXUPÉ*`,
+    `🌱 *RECOMENDAÇÃO TÉCNICA - GUIA AGRONÔMICO AGROBASE*`,
     `📌 *Produto:* ${p.titulo}`,
   ];
 
@@ -144,7 +144,7 @@ export function imprimirFichaProduto(p: DadosFichaProduto) {
       </head>
       <body>
         <div class="header">
-          <div class="logo">🌱 Guia Agronômico Cooxupé</div>
+          <div class="logo">🌱 Guia Agronômico AgroBase</div>
           <div class="sub">Desenvolvimento Técnico</div>
         </div>
 
@@ -179,7 +179,7 @@ export function imprimirFichaProduto(p: DadosFichaProduto) {
         ${p.instrucoes ? `<div class="box" style="margin-bottom:15px;"><div class="label">Instruções de Aplicação</div><div>${p.instrucoes}</div></div>` : ""}
 
         <div class="footer">
-          Ficha emitida via Guia Agronômico Cooxupé - Uso interno do time de Desenvolvimento Técnico.
+          Ficha emitida via Guia Agronômico AgroBase - Uso interno do time de Desenvolvimento Técnico.
         </div>
         <script>window.print();</script>
       </body>
