@@ -38,9 +38,11 @@ function Gate() {
 
   useEffect(() => {
     if (!carregando && !checando && !session) {
-      void navigate({ to: "/", replace: true });
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
     }
-  }, [carregando, checando, session, navigate]);
+  }, [carregando, checando, session]);
 
   if (carregando || checando || !session) {
     return (

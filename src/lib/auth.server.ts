@@ -158,17 +158,27 @@ export async function entrarComEmailESenha(email: string, senha: string, manterC
       console.warn("[Auth Warning] Aviso ao gravar sessão do admin no banco. Autenticando com cookie:", err);
     }
 
+    const adminUser: SessionUser = {
+      id: "00000000-0000-0000-0000-000000000001",
+      email: "joseduque@cooxupe.com.br",
+      nomeCompleto: "José Duque da Silva Neto",
+      cargo: "Administrador do Sistema",
+      papeis: ["admin"],
+    };
+
     setCookieHeader(sessionToken, expiresAt);
-    return { ok: true, token: sessionToken };
+    return { ok: true, token: sessionToken, user: adminUser };
   }
 
   // Tratamento padrão para outros usuários
-  let user: { id: string; email: string; password_hash: string | null; status: string } | undefined;
+  let user: { id: string; email: string; nome_completo?: string; cargo?: string; password_hash: string | null; status: string } | undefined;
   try {
     const [row] = await sql`
       SELECT
         id::text,
         email::text,
+        nome_completo,
+        cargo,
         password_hash,
         status::text
       FROM public.app_users
@@ -210,8 +220,27 @@ export async function entrarComEmailESenha(email: string, senha: string, manterC
     // ignora se DB indisponível
   }
 
+  let papeis: ("admin" | "tecnico")[] = ["tecnico"];
+  try {
+    const roleRows = await sql`
+      SELECT role::text FROM public.user_roles WHERE user_id = ${user.id}::uuid
+    `;
+    const p = roleRows.map((r: any) => r.role as "admin" | "tecnico");
+    if (p.length > 0) papeis = p;
+  } catch {
+    // ignora erro de roles
+  }
+
+  const sessionUser: SessionUser = {
+    id: user.id,
+    email: user.email,
+    nomeCompleto: user.nome_completo || user.email,
+    cargo: user.cargo || "Técnico Agronômico",
+    papeis,
+  };
+
   setCookieHeader(sessionToken, expiresAt);
-  return { ok: true, token: sessionToken };
+  return { ok: true, token: sessionToken, user: sessionUser };
 }
 
 /**
@@ -564,20 +593,50 @@ export async function ativarContaComCodigo(email: string, codigo: string, senha:
         VALUES (${sessionId}::uuid, ${invite.user_id}::uuid, ${sessionTokenHash}, ${expiresStr})
       `;
     } catch {
-      // ignora se erro de sessão em dev
+      // ignora se erro de sessao em dev
     }
 
+    let papeis: ("admin" | "tecnico")[] = ["tecnico"];
+    try {
+      const roleRows = await sql`
+        SELECT role::text FROM public.user_roles WHERE user_id = ${invite.user_id}::uuid
+      `;
+      const p = roleRows.map((r: any) => r.role as "admin" | "tecnico");
+      if (p.length > 0) papeis = p;
+    } catch {
+      // fallback
+    }
+
+    const sessionUser: SessionUser = {
+      id: invite.user_id,
+      email: invite.email,
+      nomeCompleto: invite.nome_completo || invite.email,
+      cargo: "Técnico Agronômico",
+      papeis,
+    };
+
     setCookieHeader(sessionToken, expiresAt);
-    return { ok: true };
+    return { ok: true, token: sessionToken, user: sessionUser };
   } catch (err: any) {
     throw new Error(err?.message || "Não foi possível ativar a conta. Verifique o código e tente novamente.");
   }
 }
 
 function setCookieHeader(token: string, expiresAt: Date) {
-  const isProd = process.env["NODE_ENV"] === "production";
+  let isSecure = false;
+  try {
+    const request = getRequest();
+    if (request) {
+      const proto = request.headers.get("x-forwarded-proto") || "";
+      const url = request.url || "";
+      isSecure = proto === "https" || url.startsWith("https://");
+    }
+  } catch {
+    // fallback
+  }
+
   const cookieValue = `${SESSION_COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; ${
-    isProd ? "Secure; " : ""
+    isSecure ? "Secure; " : ""
   }Expires=${expiresAt.toUTCString()}`;
   try {
     setResponseHeader("Set-Cookie", cookieValue);

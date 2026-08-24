@@ -115,7 +115,6 @@ export function AppShell({
 
   async function sair() {
     await efetuarSair();
-    await navigate({ to: "/", replace: true });
   }
 
   const renderNavLinks = (compact = false) => (

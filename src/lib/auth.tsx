@@ -36,14 +36,36 @@ const Contexto = createContext<AuthContexto>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [papeis, setPapeis] = useState<Papel[]>([]);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("agri_hub_user");
+        if (saved) return JSON.parse(saved);
+      } catch {
+        // ignora erro de json
+      }
+    }
+    return null;
+  });
+
+  const [papeis, setPapeis] = useState<Papel[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("agri_hub_papeis");
+        if (saved) return JSON.parse(saved);
+      } catch {
+        // ignora
+      }
+    }
+    return [];
+  });
+
   const [carregando, setCarregando] = useState(true);
 
   const carregarSessao = useCallback(async () => {
     try {
       const res = await obterSessaoFn();
-      if (res.user) {
+      if (res?.user) {
         const u: User = {
           id: res.user.id,
           email: res.user.email,
@@ -51,14 +73,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           cargo: res.user.cargo,
         };
         setUser(u);
-        setPapeis(res.user.papeis as Papel[]);
+        const roles = (res.user.papeis || []) as Papel[];
+        setPapeis(roles);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("agri_hub_user", JSON.stringify(u));
+          localStorage.setItem("agri_hub_papeis", JSON.stringify(roles));
+        }
       } else {
         setUser(null);
         setPapeis([]);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("agri_hub_user");
+          localStorage.removeItem("agri_hub_papeis");
+        }
       }
     } catch {
-      setUser(null);
-      setPapeis([]);
+      // se falhar temporariamente a rede, mantem o estado
     } finally {
       setCarregando(false);
     }
@@ -80,25 +110,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
 
-        // Garantir gravação do cookie no cliente imediatamente
+        // Garantir gravação do cookie no cliente
         if (typeof document !== "undefined" && res?.token) {
-          const isProd = window.location.protocol === "https:";
+          const isHttps = window.location.protocol === "https:";
           const maxAge = manterConectado ? 30 * 24 * 3600 : 24 * 3600;
           document.cookie = `agri_hub_session=${res.token}; Path=/; max-age=${maxAge}; SameSite=Lax; ${
-            isProd ? "Secure;" : ""
+            isHttps ? "Secure;" : ""
           }`;
         }
 
+        // Se o servidor retornou o usuário diretamente, usa-o imediatamente sem round-trip extra
+        const returnedUser = (res as any)?.user;
+        if (returnedUser) {
+          const u: User = {
+            id: returnedUser.id,
+            email: returnedUser.email,
+            nomeCompleto: returnedUser.nomeCompleto,
+            cargo: returnedUser.cargo,
+          };
+          const roles = (returnedUser.papeis || ["tecnico"]) as Papel[];
+          setUser(u);
+          setPapeis(roles);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("agri_hub_user", JSON.stringify(u));
+            localStorage.setItem("agri_hub_papeis", JSON.stringify(roles));
+          }
+          return u;
+        }
+
+        // Fallback: obter do servidor
         const sess = await obterSessaoFn();
-        if (sess.user) {
+        if (sess?.user) {
           const u: User = {
             id: sess.user.id,
             email: sess.user.email,
             nomeCompleto: sess.user.nomeCompleto,
             cargo: sess.user.cargo,
           };
+          const roles = (sess.user.papeis || []) as Papel[];
           setUser(u);
-          setPapeis(sess.user.papeis as Papel[]);
+          setPapeis(roles);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("agri_hub_user", JSON.stringify(u));
+            localStorage.setItem("agri_hub_papeis", JSON.stringify(roles));
+          }
           return u;
         }
         return null;
@@ -112,12 +167,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sair = useCallback(async () => {
     try {
       await sairFn();
-      if (typeof document !== "undefined") {
-        document.cookie = "agri_hub_session=; Path=/; max-age=0; SameSite=Lax;";
-      }
+    } catch {
+      // ignora erro de rede no logout
     } finally {
       setUser(null);
       setPapeis([]);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("agri_hub_user");
+        localStorage.removeItem("agri_hub_papeis");
+        document.cookie = "agri_hub_session=; Path=/; max-age=0; SameSite=Lax;";
+        window.location.href = "/";
+      }
     }
   }, []);
 
@@ -135,9 +195,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           toast.info("Sessão encerrada por inatividade (30 min) para sua segurança.", {
             duration: 7000,
           });
-          if (typeof window !== "undefined") {
-            window.location.href = "/";
-          }
         });
       }, INATIVIDADE_MAXIMA);
     };
