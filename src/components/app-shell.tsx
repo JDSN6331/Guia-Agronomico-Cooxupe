@@ -254,7 +254,16 @@ export function AppShell({
                     <Camera className="mr-2 size-4 text-gold" /> Alterar Foto de Perfil
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={sair}>
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      void sair();
+                    }}
+                    onClick={() => {
+                      void sair();
+                    }}
+                    className="cursor-pointer"
+                  >
                     <LogOut className="mr-2 size-4" /> Sair
                   </DropdownMenuItem>
                 </DropdownMenuContent>

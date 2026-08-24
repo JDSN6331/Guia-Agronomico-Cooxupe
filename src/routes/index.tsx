@@ -53,8 +53,12 @@ function Login() {
   const [sucessoCadastro, setSucessoCadastro] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!carregando && session) void navigate({ to: "/inicio", replace: true });
-  }, [carregando, session, navigate]);
+    if (!carregando && session) {
+      if (typeof window !== "undefined") {
+        window.location.replace("/inicio");
+      }
+    }
+  }, [carregando, session]);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
@@ -69,7 +73,7 @@ function Login() {
       if (usuarioLogado) {
         toast.success("Bem-vindo ao Guia Agronômico!");
         if (typeof window !== "undefined") {
-          window.location.href = "/inicio";
+          window.location.replace("/inicio");
         }
       } else {
         toast.error("Não foi possível autenticar. Verifique e-mail e senha.");

@@ -36,30 +36,8 @@ const Contexto = createContext<AuthContexto>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("agri_hub_user");
-        if (saved) return JSON.parse(saved);
-      } catch {
-        // ignora erro de json
-      }
-    }
-    return null;
-  });
-
-  const [papeis, setPapeis] = useState<Papel[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("agri_hub_papeis");
-        if (saved) return JSON.parse(saved);
-      } catch {
-        // ignora
-      }
-    }
-    return [];
-  });
-
+  const [user, setUser] = useState<User | null>(null);
+  const [papeis, setPapeis] = useState<Papel[]>([]);
   const [carregando, setCarregando] = useState(true);
 
   const carregarSessao = useCallback(async () => {
@@ -75,20 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(u);
         const roles = (res.user.papeis || []) as Papel[];
         setPapeis(roles);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("agri_hub_user", JSON.stringify(u));
-          localStorage.setItem("agri_hub_papeis", JSON.stringify(roles));
-        }
       } else {
         setUser(null);
         setPapeis([]);
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("agri_hub_user");
-          localStorage.removeItem("agri_hub_papeis");
-        }
       }
     } catch {
-      // se falhar temporariamente a rede, mantem o estado
+      setUser(null);
+      setPapeis([]);
     } finally {
       setCarregando(false);
     }
@@ -119,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }`;
         }
 
-        // Se o servidor retornou o usuário diretamente, usa-o imediatamente sem round-trip extra
+        // Se o servidor retornou o usuário diretamente, usa-o imediatamente
         const returnedUser = (res as any)?.user;
         if (returnedUser) {
           const u: User = {
@@ -131,10 +102,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const roles = (returnedUser.papeis || ["tecnico"]) as Papel[];
           setUser(u);
           setPapeis(roles);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("agri_hub_user", JSON.stringify(u));
-            localStorage.setItem("agri_hub_papeis", JSON.stringify(roles));
-          }
           return u;
         }
 
@@ -150,10 +117,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const roles = (sess.user.papeis || []) as Papel[];
           setUser(u);
           setPapeis(roles);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("agri_hub_user", JSON.stringify(u));
-            localStorage.setItem("agri_hub_papeis", JSON.stringify(roles));
-          }
           return u;
         }
         return null;
@@ -172,11 +135,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setUser(null);
       setPapeis([]);
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("agri_hub_user");
-        localStorage.removeItem("agri_hub_papeis");
+      if (typeof document !== "undefined") {
         document.cookie = "agri_hub_session=; Path=/; max-age=0; SameSite=Lax;";
-        window.location.href = "/";
+      }
+      if (typeof window !== "undefined") {
+        window.location.replace("/");
       }
     }
   }, []);
