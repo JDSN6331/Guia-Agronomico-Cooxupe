@@ -15,13 +15,13 @@ import { FlaticonCornSoy } from "@/components/flaticon-icons";
 export const Route = createFileRoute("/_authenticated/milho-soja")({
   head: () => ({
     meta: [
-      { title: "Catálogo Milho e Soja | AgroBase" },
+      { title: "Milho e Soja | AgroBase" },
       {
         name: "description",
         content:
           "Defensivos, fertilizantes e bioestimulantes para milho e soja com dosagem, composição, instruções de aplicação e carência.",
       },
-      { property: "og:title", content: "Catálogo Milho e Soja | AgroBase" },
+      { property: "og:title", content: "Milho e Soja | AgroBase" },
       {
         property: "og:description",
         content: "Produtos para milho e soja do Programa de Manejo Técnico.",
@@ -33,12 +33,10 @@ export const Route = createFileRoute("/_authenticated/milho-soja")({
 
 function PaginaMilhoSoja() {
   const [termo, setTermo] = useState("");
-  const [grupo, setGrupo] = useState("todos");
   const [familia, setFamilia] = useState("todos");
   const [fornecedor, setFornecedor] = useState("todos");
   const [cultura, setCultura] = useState("todos");
 
-  const grupos = useMemo(() => unicos(programa.milhoSoja.map((p) => p.grupo)), []);
   const familias = useMemo(() => unicos(programa.milhoSoja.map((p) => p.familia)), []);
   const fornecedores = useMemo(() => unicos(programa.milhoSoja.map((p) => p.fornecedor)), []);
   const culturas = useMemo(() => unicos(programa.milhoSoja.map((p) => p.cultura)), []);
@@ -47,18 +45,17 @@ function PaginaMilhoSoja() {
     () =>
       programa.milhoSoja.filter(
         (p) =>
-          (grupo === "todos" || p.grupo === grupo) &&
           (familia === "todos" || p.familia === familia) &&
           (fornecedor === "todos" || p.fornecedor === fornecedor) &&
           (cultura === "todos" || p.cultura === cultura) &&
           buscaEm(termo, [p.produto, p.fornecedor, p.grupo, p.familia, p.cultura, p.funcao, p.composicao]),
       ),
-    [termo, grupo, familia, fornecedor, cultura],
+    [termo, familia, fornecedor, cultura],
   );
 
   return (
     <AppShell
-      titulo="Catálogo - Milho e Soja"
+      titulo="Milho e Soja"
       descricao="Dosagem, composição, instruções de aplicação e carência"
     >
       <div className="mx-auto max-w-6xl space-y-4">
@@ -69,7 +66,6 @@ function PaginaMilhoSoja() {
           total={programa.milhoSoja.length}
           exibidos={lista.length}
           filtros={[
-            { id: "grupo", rotulo: "Grupo", opcoes: grupos, valor: grupo, onChange: setGrupo },
             { id: "familia", rotulo: "Família", opcoes: familias, valor: familia, onChange: setFamilia },
             {
               id: "cultura",
@@ -89,7 +85,7 @@ function PaginaMilhoSoja() {
         />
 
         {lista.length === 0 ? (
-          <VazioResultado onLimpar={() => { setTermo(""); setGrupo("todos"); setFamilia("todos"); setFornecedor("todos"); setCultura("todos"); }} />
+          <VazioResultado onLimpar={() => { setTermo(""); setFamilia("todos"); setFornecedor("todos"); setCultura("todos"); }} />
         ) : (
           <Accordion type="multiple" className="space-y-3">
             {lista.map((p) => (
@@ -103,22 +99,24 @@ function PaginaMilhoSoja() {
 }
 
 function Ficha({ produto: p }: { produto: ProdutoMilhoSoja }) {
+  const legenda = [p.familia, p.fornecedor].filter(Boolean).join(" · ");
+
   return (
-    <AccordionItem value={p.id} className="panel border-none px-4">
-      <AccordionTrigger className="py-4 hover:no-underline">
-        <div className="flex min-w-0 flex-1 items-start gap-3 text-left">
-          <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
-            <FlaticonCornSoy size={20} />
+    <AccordionItem value={p.id} className="panel border-none px-3.5 sm:px-4">
+      <AccordionTrigger className="py-3.5 sm:py-4 hover:no-underline">
+        <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:gap-3 text-left pr-1">
+          <span className="mt-0.5 grid size-8 sm:size-9 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
+            <FlaticonCornSoy size={18} className="sm:size-5" />
           </span>
-          <div className="min-w-0">
-            <p className="truncate font-display text-[15px] font-semibold">{p.produto}</p>
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {[p.grupo, p.familia, p.cultura, p.fornecedor].filter(Boolean).join(" · ")}
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-sm sm:text-[15px] font-semibold text-foreground break-words leading-snug">{p.produto}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground break-words line-clamp-2 leading-tight">
+              {legenda}
             </p>
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="space-y-5 pb-5">
+      <AccordionContent className="space-y-4 sm:space-y-5 pb-5">
         <div className="grid gap-4 sm:grid-cols-2">
           {p.dosagem && <Campo rotulo="Dosagem">{p.dosagem}</Campo>}
           {p.composicao && <Campo rotulo="Composição">{p.composicao}</Campo>}
@@ -127,9 +125,9 @@ function Ficha({ produto: p }: { produto: ProdutoMilhoSoja }) {
         {p.funcao && <Campo rotulo="Função">{p.funcao}</Campo>}
         {p.instrucoes && <Campo rotulo="Instruções de aplicação">{p.instrucoes}</Campo>}
         <div className="flex flex-wrap gap-2">
-          {p.grupo && <Badge variant="secondary">{p.grupo}</Badge>}
-          {p.familia && <Badge variant="outline" className="border-blue-500/30 text-blue-400">{p.familia}</Badge>}
-          {p.cultura && <Badge variant="outline">{p.cultura}</Badge>}
+          {p.grupo && <Badge variant="secondary" className="max-w-full break-words whitespace-normal text-left">{p.grupo}</Badge>}
+          {p.familia && <Badge variant="outline" className="border-blue-500/30 text-blue-400 max-w-full break-words whitespace-normal text-left">{p.familia}</Badge>}
+          {p.cultura && <Badge variant="outline" className="max-w-full break-words whitespace-normal text-left">{p.cultura}</Badge>}
           <Carencia dias={p.carencia} />
         </div>
 

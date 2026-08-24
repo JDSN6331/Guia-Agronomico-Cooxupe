@@ -73,7 +73,7 @@ import { copiarTexto } from "@/lib/share-utils";
 export const Route = createFileRoute("/_authenticated/usuarios")({
   head: () => ({
     meta: [
-      { title: "Gestão do Sistema | Guia Agronômico" },
+      { title: "Gestão do Sistema | AgroBase" },
       {
         name: "description",
         content: "Gerenciamento de convites, permissões de usuários e atualização da base agronômica.",
@@ -208,7 +208,7 @@ function PaginaGestaoSistema() {
         <Tabs defaultValue="usuarios" className="w-full">
           <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="usuarios" className="gap-2 text-xs font-bold">
-              <Users className="size-4" /> Usuários e Permissões
+              <Users className="size-4" /> Usuários e Permissões {usuarios.data ? `(${usuarios.data.length})` : ""}
             </TabsTrigger>
             <TabsTrigger value="dados" className="gap-2 text-xs font-bold">
               <FileSpreadsheet className="size-4" /> Atualização da Base (Planilha)
@@ -219,8 +219,15 @@ function PaginaGestaoSistema() {
           <TabsContent value="usuarios" className="mt-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="font-display text-lg font-bold">Equipe Cadastrada</h2>
-                <p className="text-xs text-muted-foreground">
+                <div className="flex items-center gap-2.5">
+                  <h2 className="font-display text-lg font-bold">Equipe Cadastrada</h2>
+                  {usuarios.data && (
+                    <Badge variant="outline" className="border-gold/50 text-gold bg-gold/10 text-xs font-bold">
+                      {usuarios.data.length} {usuarios.data.length === 1 ? "usuário cadastrado" : "usuários cadastrados"}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Acompanhe convites pendentes e gerencie o nível de acesso dos usuários
                 </p>
               </div>
@@ -253,11 +260,11 @@ function PaginaGestaoSistema() {
                           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                             {iniciais(u.nomeCompleto || u.email)}
                           </span>
-                          <div className="min-w-0">
-                            <p className="font-display text-sm font-bold truncate">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-display text-sm font-bold break-words leading-tight">
                               {u.nomeCompleto || u.email?.split("@")[0] || "Usuário"}
                             </p>
-                            <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                            <p className="text-xs text-muted-foreground break-all">{u.email}</p>
                           </div>
                         </div>
 

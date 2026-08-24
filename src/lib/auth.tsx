@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { obterSessaoFn, sairFn } from "./auth.functions";
+import { entrarFn, obterSessaoFn, sairFn } from "./auth.functions";
 
 export type Papel = "admin" | "tecnico";
 
@@ -17,6 +17,7 @@ type AuthContexto = {
   session: { user: User } | null;
   papeis: Papel[];
   isAdmin: boolean;
+  entrar: (email: string, senha: string, manterConectado?: boolean) => Promise<User | null>;
   recarregarSessao: () => Promise<void>;
   recarregarPapeis: () => Promise<void>;
   sair: () => Promise<void>;
@@ -28,6 +29,7 @@ const Contexto = createContext<AuthContexto>({
   session: null,
   papeis: [],
   isAdmin: false,
+  entrar: async () => null,
   recarregarSessao: async () => {},
   recarregarPapeis: async () => {},
   sair: async () => {},
@@ -66,9 +68,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void carregarSessao();
   }, [carregarSessao]);
 
+  const entrar = useCallback(
+    async (email: string, senha: string, manterConectado = false) => {
+      setCarregando(true);
+      try {
+        const res = await entrarFn({
+          data: {
+            email: email.trim(),
+            senha,
+            manterConectado,
+          },
+        });
+
+        // Garantir gravação do cookie no cliente imediatamente
+        if (typeof document !== "undefined" && res?.token) {
+          const isProd = window.location.protocol === "https:";
+          const maxAge = manterConectado ? 30 * 24 * 3600 : 24 * 3600;
+          document.cookie = `agri_hub_session=${res.token}; Path=/; max-age=${maxAge}; SameSite=Lax; ${
+            isProd ? "Secure;" : ""
+          }`;
+        }
+
+        const sess = await obterSessaoFn();
+        if (sess.user) {
+          const u: User = {
+            id: sess.user.id,
+            email: sess.user.email,
+            nomeCompleto: sess.user.nomeCompleto,
+            cargo: sess.user.cargo,
+          };
+          setUser(u);
+          setPapeis(sess.user.papeis as Papel[]);
+          return u;
+        }
+        return null;
+      } finally {
+        setCarregando(false);
+      }
+    },
+    [],
+  );
+
   const sair = useCallback(async () => {
     try {
       await sairFn();
+      if (typeof document !== "undefined") {
+        document.cookie = "agri_hub_session=; Path=/; max-age=0; SameSite=Lax;";
+      }
     } finally {
       setUser(null);
       setPapeis([]);
@@ -115,11 +161,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       papeis: Array.isArray(papeis) ? papeis : [],
       isAdmin: Array.isArray(papeis) && papeis.includes("admin"),
+      entrar,
       recarregarSessao: carregarSessao,
       recarregarPapeis: carregarSessao,
       sair,
     }),
-    [carregando, user, session, papeis, carregarSessao, sair],
+    [carregando, user, session, papeis, entrar, carregarSessao, sair],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

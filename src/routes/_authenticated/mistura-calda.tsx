@@ -6,7 +6,7 @@ import { AlertTriangle, CheckCircle2, Droplets, Info } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/mistura-calda")({
   head: () => ({
     meta: [
-      { title: "Guia de Mistura de Calda | AgroBase" },
+      { title: "Mistura de Calda | AgroBase" },
       {
         name: "description",
         content:
@@ -79,7 +79,7 @@ const ETAPAS_MISTURA = [
 function PaginaMisturaCalda() {
   return (
     <AppShell
-      titulo="Guia de Mistura de Calda"
+      titulo="Mistura de Calda"
       descricao="Sequência recomendada de adição de produtos no tanque para evitar incompatibilidade química e entupimentos"
     >
       <div className="mx-auto max-w-5xl space-y-8">

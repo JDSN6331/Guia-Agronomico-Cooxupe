@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Layers, TriangleAlert } from "lucide-react";
+import { ArrowRight, Gauge, Layers, TriangleAlert } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { programa, totais, unicos } from "@/data/programa";
 import { useAuth } from "@/lib/auth";
@@ -15,13 +15,13 @@ import {
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
     meta: [
-      { title: "Início | Guia Agronômico AgroBase" },
+      { title: "Início | AgroBase" },
       {
         name: "description",
         content:
           "Painel inicial da base de conhecimento: catálogos de Café, Milho e Soja, famílias de produtos, calculadora de dosagem e calendário de manejo do Guia Agronômico AgroBase.",
       },
-      { property: "og:title", content: "Início | Guia Agronômico AgroBase" },
+      { property: "og:title", content: "Início | AgroBase" },
       {
         property: "og:description",
         content: "Painel inicial da base de conhecimento técnico AgroBase.",
@@ -63,6 +63,12 @@ const ATALHOS = [
     texto: "Cálculo instantâneo de produto comercial, calda total e reabastecimentos.",
   },
   {
+    to: "/calculadora-vazao",
+    icon: Gauge,
+    titulo: "Calculadora de Vazão",
+    texto: "Calibração técnica de bicos (L/min) e velocidade para turboatomizadores, barras e herbicidas.",
+  },
+  {
     to: "/mistura-calda",
     icon: FlaticonTankMix,
     titulo: "Mistura de Calda",
@@ -74,30 +80,29 @@ function Inicio() {
   const { user, isAdmin } = useAuth();
   const nome = (user?.nomeCompleto || user?.email || "").split(" ")[0];
 
-  const grupos = unicos(programa.cafe.map((p) => p.grupo)).length;
   const fornecedores = unicos([
     ...programa.cafe.map((p) => p.fornecedor),
     ...programa.milhoSoja.map((p) => p.fornecedor),
-  ]).length;
+  ].filter(Boolean)).length;
 
   const familias = unicos([
-    ...programa.cafe.map((p) => (p as any).familia),
-    ...programa.milhoSoja.map((p) => (p as any).familia),
+    ...programa.cafe.map((p) => p.familia),
+    ...programa.milhoSoja.map((p) => p.familia),
   ].filter(Boolean)).length;
 
   const metricas = [
     { valor: totais.cafe, rotulo: "Produtos Café" },
     { valor: totais.milhoSoja, rotulo: "Produtos Milho e Soja" },
-    { valor: familias || 14, rotulo: "Famílias de Produtos" },
-    { valor: grupos, rotulo: "Grupos de manejo" },
+    { valor: familias, rotulo: "Famílias de Produtos" },
     { valor: fornecedores, rotulo: "Fornecedores" },
-    { valor: totais.janelas, rotulo: "Janelas de manejo" },
+    { valor: totais.janelas, rotulo: "Janelas de Manejo" },
+    { valor: programa.nutrientes?.length || 5, rotulo: "Grupos de Nutrientes" },
   ];
 
   return (
     <AppShell
-      titulo={nome ? `Olá, ${nome}` : "Início"}
-      descricao={APP.nomeCompleto}
+      titulo="Início"
+      descricao={nome ? `Olá, ${nome} — ${APP.nomeCompleto}` : APP.nomeCompleto}
     >
       <div className="mx-auto max-w-6xl space-y-8">
         {/* Banner Principal — Verde Profundo Elegante com Alta Legibilidade em Todos os Temas */}
@@ -125,7 +130,7 @@ function Inicio() {
                 style={{ background: "linear-gradient(90deg, #d4b054 0%, transparent 100%)" }}
               />
               <p className="mt-4 text-sm sm:text-[14.5px] leading-relaxed text-emerald-100/90 font-medium">
-                Consulte produtos por cultura, ingrediente ativo, fornecedor ou grupo. Cada ficha traz
+                Consulte produtos por cultura, ingrediente ativo, fornecedor ou família. Cada ficha traz
                 dosagem por estágio, instruções de aplicação, função e intervalo de segurança.
               </p>
 
@@ -134,21 +139,6 @@ function Inicio() {
                 <p className="mt-0.5 opacity-90 text-emerald-100">
                   Consulte sempre a bula oficial e o receituário agronômico antes da aplicação.
                 </p>
-              </div>
-
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                <Link
-                  to="/cafe"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#d4b054] px-5 py-2.5 text-sm font-bold text-[#071e11] shadow-lg transition-all hover:bg-[#e2bd5d] hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  Abrir catálogo de Café <ArrowRight className="size-4" />
-                </Link>
-                <Link
-                  to="/familia-produtos"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20 hover:border-white/50"
-                >
-                  Família de Produtos
-                </Link>
               </div>
             </div>
 

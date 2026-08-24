@@ -64,13 +64,13 @@ const STORAGE_KEY = "guia_agronomico_programa_data";
 const HISTORICO_KEY = "guia_agronomico_historico_versoes";
 
 const VERSAO_OFICIAL_PADRAO: VersaoPlanilha = {
-  id: "versao-oficial-2026",
-  nomeArquivo: "Programa de uso 2026.xlsx",
-  versao: "2026.1 (Oficial)",
-  dataEnvio: "2026-08-05T12:00:00.000Z",
+  id: "versao-oficial-geral",
+  nomeArquivo: "Programa de Uso Geral.xlsx",
+  versao: "Geral.1 (Oficial)",
+  dataEnvio: "2026-08-24T12:00:00.000Z",
   enviadoPor: "Sistema (Oficial)",
-  totalCafe: (raw2026 as unknown as ProgramaData).cafe?.length || 463,
-  totalMilhoSoja: (raw2026 as unknown as ProgramaData).milhoSoja?.length || 517,
+  totalCafe: (raw2026 as unknown as ProgramaData).cafe?.length || 473,
+  totalMilhoSoja: (raw2026 as unknown as ProgramaData).milhoSoja?.length || 522,
 };
 
 export function obterProgramaAtual(): ProgramaData {

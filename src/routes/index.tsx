@@ -37,7 +37,7 @@ const GOLD = "#d4b054";
 
 function Login() {
   const navigate = useNavigate();
-  const { session, carregando, recarregarSessao } = useAuth();
+  const { session, carregando, entrar: efetuarLogin, recarregarSessao } = useAuth();
   const { tema, alternar } = useTema();
   const [nomeCompleto, setNomeCompleto] = useState("");
   const [cargo, setCargo] = useState("");
@@ -65,10 +65,13 @@ function Login() {
     }
     setEnviando(true);
     try {
-      await entrarFn({ data: { email: parsed.data.email, senha: parsed.data.senha, manterConectado } });
-      await recarregarSessao();
-      toast.success("Bem-vindo ao Guia Agronômico!");
-      await navigate({ to: "/inicio", replace: true });
+      const usuarioLogado = await efetuarLogin(parsed.data.email, parsed.data.senha, manterConectado);
+      if (usuarioLogado) {
+        toast.success("Bem-vindo ao Guia Agronômico!");
+        await navigate({ to: "/inicio", replace: true });
+      } else {
+        toast.error("Não foi possível autenticar. Verifique e-mail e senha.");
+      }
     } catch (err: unknown) {
       const msg =
         err instanceof Error && err.message && !err.message.includes("aborted")

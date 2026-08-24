@@ -25,7 +25,7 @@ export function Brand({
           <span className="block font-display text-[15px] font-bold tracking-tight text-foreground">
             {APP.nome}
           </span>
-          <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-gold mt-0.5">
+          <span className="block text-[11px] font-semibold tracking-wider text-gold mt-0.5">
             AgroBase
           </span>
         </div>

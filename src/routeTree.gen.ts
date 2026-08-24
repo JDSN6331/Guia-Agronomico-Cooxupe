@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as DefinirSenhaRouteImport } from './routes/definir-senha'
 import { Route as AuthenticatedCafeRouteImport } from './routes/_authenticated/cafe'
 import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenticated/calculadora'
+import { Route as AuthenticatedCalculadoraVazaoRouteImport } from './routes/_authenticated/calculadora-vazao'
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedFamiliaProdutosRouteImport } from './routes/_authenticated/familia-produtos'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
@@ -44,6 +45,12 @@ const AuthenticatedCalculadoraRoute =
   AuthenticatedCalculadoraRouteImport.update({
     id: '/calculadora',
     path: '/calculadora',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCalculadoraVazaoRoute =
+  AuthenticatedCalculadoraVazaoRouteImport.update({
+    id: '/calculadora-vazao',
+    path: '/calculadora-vazao',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
@@ -84,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/definir-senha': typeof DefinirSenhaRoute
   '/cafe': typeof AuthenticatedCafeRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
+  '/calculadora-vazao': typeof AuthenticatedCalculadoraVazaoRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/familia-produtos': typeof AuthenticatedFamiliaProdutosRoute
   '/inicio': typeof AuthenticatedInicioRoute
@@ -96,6 +104,7 @@ export interface FileRoutesByTo {
   '/definir-senha': typeof DefinirSenhaRoute
   '/cafe': typeof AuthenticatedCafeRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
+  '/calculadora-vazao': typeof AuthenticatedCalculadoraVazaoRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/familia-produtos': typeof AuthenticatedFamiliaProdutosRoute
   '/inicio': typeof AuthenticatedInicioRoute
@@ -110,6 +119,7 @@ export interface FileRoutesById {
   '/definir-senha': typeof DefinirSenhaRoute
   '/_authenticated/cafe': typeof AuthenticatedCafeRoute
   '/_authenticated/calculadora': typeof AuthenticatedCalculadoraRoute
+  '/_authenticated/calculadora-vazao': typeof AuthenticatedCalculadoraVazaoRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
   '/_authenticated/familia-produtos': typeof AuthenticatedFamiliaProdutosRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
     | '/definir-senha'
     | '/cafe'
     | '/calculadora'
+    | '/calculadora-vazao'
     | '/calendario'
     | '/familia-produtos'
     | '/inicio'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | '/definir-senha'
     | '/cafe'
     | '/calculadora'
+    | '/calculadora-vazao'
     | '/calendario'
     | '/familia-produtos'
     | '/inicio'
@@ -149,6 +161,7 @@ export interface FileRouteTypes {
     | '/definir-senha'
     | '/_authenticated/cafe'
     | '/_authenticated/calculadora'
+    | '/_authenticated/calculadora-vazao'
     | '/_authenticated/calendario'
     | '/_authenticated/familia-produtos'
     | '/_authenticated/inicio'
@@ -200,6 +213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalculadoraRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/calculadora-vazao': {
+      id: '/_authenticated/calculadora-vazao'
+      path: '/calculadora-vazao'
+      fullPath: '/calculadora-vazao'
+      preLoaderRoute: typeof AuthenticatedCalculadoraVazaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/calendario': {
       id: '/_authenticated/calendario'
       path: '/calendario'
@@ -248,6 +268,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCafeRoute: typeof AuthenticatedCafeRoute
   AuthenticatedCalculadoraRoute: typeof AuthenticatedCalculadoraRoute
+  AuthenticatedCalculadoraVazaoRoute: typeof AuthenticatedCalculadoraVazaoRoute
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
   AuthenticatedFamiliaProdutosRoute: typeof AuthenticatedFamiliaProdutosRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
@@ -259,6 +280,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCafeRoute: AuthenticatedCafeRoute,
   AuthenticatedCalculadoraRoute: AuthenticatedCalculadoraRoute,
+  AuthenticatedCalculadoraVazaoRoute: AuthenticatedCalculadoraVazaoRoute,
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
   AuthenticatedFamiliaProdutosRoute: AuthenticatedFamiliaProdutosRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,

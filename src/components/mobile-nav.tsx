@@ -8,6 +8,7 @@ import {
   Moon,
   Sun,
   ChevronRight,
+  Gauge,
 } from "lucide-react";
 import {
   FlaticonCoffee,
@@ -40,13 +41,14 @@ export function MobileNav() {
   const navPrincipal = [
     { to: "/inicio", label: "Início", icon: LayoutDashboard },
     { to: "/cafe", label: "Café", icon: FlaticonCoffee },
-    { to: "/milho-soja", label: "Milho/Soja", icon: FlaticonCornSoy },
+    { to: "/milho-soja", label: "Milho e Soja", icon: FlaticonCornSoy },
   ] as const;
 
   const maisItens = [
     { to: "/familia-produtos", label: "Família de Produtos", desc: "Famílias de insumos e defensivos", icon: FlaticonFoliar },
     { to: "/calendario", label: "Calendário de Manejo", desc: "Janelas fenológicas e produtos", icon: FlaticonCalendar },
     { to: "/calculadora", label: "Calculadora de Dosagem", desc: "Cálculo de calda e dosagens", icon: FlaticonCalculator },
+    { to: "/calculadora-vazao", label: "Calculadora de Vazão", desc: "Calibração de bicos e pulverizadores", icon: Gauge },
     { to: "/mistura-calda", label: "Mistura de Calda", desc: "Ordem de adição e prevenção", icon: FlaticonTankMix },
     ...(isAdmin ? [{ to: "/usuarios", label: "Gestão do Sistema", desc: "Convites e atualização da base", icon: FlaticonUsers }] : []),
   ] as const;

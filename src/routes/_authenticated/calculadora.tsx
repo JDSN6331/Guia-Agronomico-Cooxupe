@@ -96,7 +96,7 @@ function PaginaCalculadora() {
 
   return (
     <AppShell
-      titulo="Calculadora Agronômica"
+      titulo="Calculadora de Dosagem"
       descricao="Dimensionamento de produto comercial, calda total e abastecimentos de pulverizador"
     >
       <div className="mx-auto max-w-5xl space-y-6">

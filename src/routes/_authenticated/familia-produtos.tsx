@@ -19,7 +19,7 @@ import type { ProdutoCafe, ProdutoMilhoSoja } from "@/data/programa";
 export const Route = createFileRoute("/_authenticated/familia-produtos")({
   head: () => ({
     meta: [
-      { title: "Família de Produtos | Guia Agronômico" },
+      { title: "Família de Produtos | AgroBase" },
       {
         name: "description",
         content: "Navegue pelos produtos organizados por famílias técnicas de defensivos e insumos agronômicos.",
@@ -183,10 +183,10 @@ function PaginaFamiliasProdutos() {
                           <Package className="size-4" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-display text-xs sm:text-sm font-bold text-foreground truncate leading-snug">
+                          <h3 className="font-display text-xs sm:text-sm font-bold text-foreground break-words leading-snug">
                             {fam.nome}
                           </h3>
-                          <p className="text-[11px] text-muted-foreground truncate leading-snug mt-0.5">
+                          <p className="text-[11px] text-muted-foreground break-words line-clamp-1 leading-snug mt-0.5">
                             {formatarResumoFam(fam.cafe.length, fam.milhoSoja.length)}
                           </p>
                         </div>
@@ -238,7 +238,6 @@ function PaginaFamiliasProdutos() {
 }
 
 function FichaItemCafe({ produto: p }: { produto: ProdutoCafe }) {
-  const dosagens = ESTAGIOS_CAFE.filter((e) => p.dosagens[e]);
   const legenda = [p.ingrediente || p.grupo, p.fornecedor]
     .filter(Boolean)
     .map((s) => String(s).replace(/\.{2,}/g, " ").trim())
@@ -252,8 +251,8 @@ function FichaItemCafe({ produto: p }: { produto: ProdutoCafe }) {
             <FlaticonCoffee size={18} className="sm:size-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-xs sm:text-[15px] font-semibold text-foreground">{p.produto}</p>
-            <p className="mt-0.5 truncate text-[11px] sm:text-xs text-muted-foreground">
+            <p className="font-display text-xs sm:text-[15px] font-semibold text-foreground break-words leading-snug">{p.produto}</p>
+            <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground break-words line-clamp-2 leading-tight">
               {legenda}
             </p>
           </div>
@@ -263,23 +262,38 @@ function FichaItemCafe({ produto: p }: { produto: ProdutoCafe }) {
         {p.ingrediente && <Campo rotulo="Ingrediente ativo">{p.ingrediente}</Campo>}
         {p.familia && <Campo rotulo="Família">{p.familia}</Campo>}
 
-        {dosagens.length > 0 && (
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Dosagem por estágio
-            </p>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {dosagens.map((e) => (
-                <div key={e} className="rounded-lg border border-border bg-muted/40 px-3 py-2">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Dosagem por estágio
+          </p>
+          <div className="mt-2 grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {ESTAGIOS_CAFE.map((e) => {
+              const val = p.dosagens[e];
+              const ehNa = !val || val === "NA" || val === "N/A" || val === "-";
+              return (
+                <div
+                  key={e}
+                  className={
+                    ehNa
+                      ? "rounded-lg border border-border/40 bg-muted/20 px-3 py-2 opacity-60"
+                      : "rounded-lg border border-border bg-muted/40 px-3 py-2 shadow-xs"
+                  }
+                >
                   <p className="text-xs text-muted-foreground">{e}</p>
-                  <p className="font-display text-sm font-semibold text-gold break-words">
-                    {p.dosagens[e]}
+                  <p
+                    className={
+                      ehNa
+                        ? "font-display text-xs font-semibold text-muted-foreground/80 pt-0.5"
+                        : "font-display text-sm font-semibold text-gold break-words leading-snug pt-0.5"
+                    }
+                  >
+                    {ehNa ? "NA (Não se aplica)" : val}
                   </p>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        )}
+        </div>
 
         {p.funcao && <Campo rotulo="Função">{p.funcao}</Campo>}
         {p.instrucoes && <Campo rotulo="Instruções de aplicação">{p.instrucoes}</Campo>}
@@ -324,8 +338,8 @@ function FichaItemMilhoSoja({ produto: p }: { produto: ProdutoMilhoSoja }) {
             <FlaticonCornSoy size={18} className="sm:size-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-xs sm:text-[15px] font-semibold text-foreground">{p.produto}</p>
-            <p className="mt-0.5 truncate text-[11px] sm:text-xs text-muted-foreground">
+            <p className="font-display text-xs sm:text-[15px] font-semibold text-foreground break-words leading-snug">{p.produto}</p>
+            <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground break-words line-clamp-2 leading-tight">
               {legenda}
             </p>
           </div>
