@@ -35,6 +35,7 @@ export function MobileNav() {
   async function sair() {
     setSheetAberto(false);
     await efetuarSair();
+    await navigate({ to: "/", replace: true });
   }
 
   const navPrincipal = [

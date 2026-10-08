@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
@@ -16,35 +16,14 @@ export const Route = createFileRoute("/_authenticated")({
 function Gate() {
   const { carregando, session, papeis, recarregarSessao, sair } = useAuth();
   const navigate = useNavigate();
-  const [checando, setChecando] = useState(false);
 
   useEffect(() => {
-    let ativo = true;
-    async function verificarAutenticacao() {
-      if (!carregando && !session) {
-        setChecando(true);
-        try {
-          await recarregarSessao();
-        } finally {
-          if (ativo) setChecando(false);
-        }
-      }
+    if (!carregando && !session) {
+      void navigate({ to: "/", replace: true });
     }
-    void verificarAutenticacao();
-    return () => {
-      ativo = false;
-    };
-  }, [carregando, session, recarregarSessao]);
+  }, [carregando, navigate, session]);
 
-  useEffect(() => {
-    if (!carregando && !checando && !session) {
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
-      }
-    }
-  }, [carregando, checando, session]);
-
-  if (carregando || checando || !session) {
+  if (carregando || !session) {
     return (
       <div className="grid min-h-screen place-items-center bg-background">
         <Loader2 className="size-6 animate-spin text-primary" />

@@ -1,15 +1,7 @@
-const CACHE_NAME = "agrobase-v1";
+const CACHE_NAME = "agrobase-static-v2";
 const ASSETS_TO_CACHE = [
-  "/",
-  "/inicio",
-  "/cafe",
-  "/milho-soja",
-  "/foliar",
-  "/calendario",
-  "/calculadora",
-  "/mistura-calda",
   "/manifest.json",
-  "/favicon.ico"
+  "/favicon.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -43,7 +35,15 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
 
-  // Requisições para assets locais ou fontes Google
+  // Páginas e chamadas do React Start podem conter dados de autenticação.
+  // Elas precisam sempre chegar ao servidor e nunca podem reutilizar uma
+  // resposta de sessão anterior.
+  if (event.request.mode === "navigate" || event.request.destination === "") return;
+
+  const cacheableDestinations = new Set(["style", "script", "image", "font", "manifest"]);
+  if (!cacheableDestinations.has(event.request.destination)) return;
+
+  // Cache somente para arquivos estáticos.
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -72,11 +72,7 @@ self.addEventListener("fetch", (event) => {
           }
           return networkResponse;
         })
-        .catch(() => {
-          if (event.request.mode === "navigate") {
-            return caches.match("/inicio") || caches.match("/");
-          }
-        });
+        .catch(() => new Response("", { status: 503, statusText: "Offline" }));
     })
   );
 });

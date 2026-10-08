@@ -54,11 +54,9 @@ function Login() {
 
   useEffect(() => {
     if (!carregando && session) {
-      if (typeof window !== "undefined") {
-        window.location.replace("/inicio");
-      }
+      void navigate({ to: "/inicio", replace: true });
     }
-  }, [carregando, session]);
+  }, [carregando, navigate, session]);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
@@ -72,9 +70,7 @@ function Login() {
       const usuarioLogado = await efetuarLogin(parsed.data.email, parsed.data.senha, manterConectado);
       if (usuarioLogado) {
         toast.success("Bem-vindo ao Guia Agronômico!");
-        if (typeof window !== "undefined") {
-          window.location.replace("/inicio");
-        }
+        await navigate({ to: "/inicio", replace: true });
       } else {
         toast.error("Não foi possível autenticar. Verifique e-mail e senha.");
       }
@@ -154,17 +150,16 @@ function Login() {
 
     setEnviando(true);
     try {
-      const res = await ativarContaComCodigoFn({
+      await ativarContaComCodigoFn({
         data: {
           email: emailParsed.data,
           codigo: codigoAtivacao.trim(),
           senha: novaSenha,
         },
       });
+      await recarregarSessao();
       toast.success("Conta ativada com sucesso! Bem-vindo!");
-      if (typeof window !== "undefined") {
-        window.location.href = "/inicio";
-      }
+      await navigate({ to: "/inicio", replace: true });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Código de ativação inválido.";
       toast.error(msg);

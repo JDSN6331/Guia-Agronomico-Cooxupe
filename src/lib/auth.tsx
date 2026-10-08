@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { entrarFn, obterSessaoFn, sairFn } from "./auth.functions";
 
@@ -39,10 +39,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [papeis, setPapeis] = useState<Papel[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const operacaoAtual = useRef(0);
 
   const carregarSessao = useCallback(async () => {
+    const operacao = ++operacaoAtual.current;
+    setCarregando(true);
     try {
       const res = await obterSessaoFn();
+      if (operacao !== operacaoAtual.current) return;
       if (res?.user) {
         const u: User = {
           id: res.user.id,
@@ -58,10 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPapeis([]);
       }
     } catch {
+      if (operacao !== operacaoAtual.current) return;
       setUser(null);
       setPapeis([]);
     } finally {
-      setCarregando(false);
+      if (operacao === operacaoAtual.current) setCarregando(false);
     }
   }, []);
 
@@ -71,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const entrar = useCallback(
     async (email: string, senha: string, manterConectado = false) => {
+      const operacao = ++operacaoAtual.current;
       setCarregando(true);
       try {
         const res = await entrarFn({
@@ -81,17 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
 
-        // Garantir gravação do cookie no cliente
-        if (typeof document !== "undefined" && res?.token) {
-          const isHttps = window.location.protocol === "https:";
-          const maxAge = manterConectado ? 30 * 24 * 3600 : 24 * 3600;
-          document.cookie = `agri_hub_session=${res.token}; Path=/; max-age=${maxAge}; SameSite=Lax; ${
-            isHttps ? "Secure;" : ""
-          }`;
-        }
+        if (operacao !== operacaoAtual.current) return null;
 
-        // Se o servidor retornou o usuário diretamente, usa-o imediatamente
-        const returnedUser = (res as any)?.user;
+        // O cookie seguro é gravado exclusivamente pelo servidor.
+        const returnedUser = res?.user;
         if (returnedUser) {
           const u: User = {
             id: returnedUser.id,
@@ -121,26 +120,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return null;
       } finally {
-        setCarregando(false);
+        if (operacao === operacaoAtual.current) setCarregando(false);
       }
     },
     [],
   );
 
   const sair = useCallback(async () => {
+    ++operacaoAtual.current;
+    setCarregando(true);
+    setUser(null);
+    setPapeis([]);
     try {
       await sairFn();
     } catch {
       // ignora erro de rede no logout
     } finally {
-      setUser(null);
-      setPapeis([]);
+      // Remove também um eventual cookie legado criado por versões anteriores.
       if (typeof document !== "undefined") {
         document.cookie = "agri_hub_session=; Path=/; max-age=0; SameSite=Lax;";
       }
-      if (typeof window !== "undefined") {
-        window.location.replace("/");
-      }
+      setCarregando(false);
     }
   }, []);
 

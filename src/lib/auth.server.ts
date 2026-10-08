@@ -87,88 +87,20 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       };
     }
   } catch (err) {
-    console.warn("[Auth Warning] Erro ao verificar sessão no banco. Usando fallback de admin:", err);
+    console.error("[Auth Error] Erro ao verificar sessão no banco:", err);
   }
 
-  // Fallback de dev quando o cookie de sessão do admin foi setado
-  return {
-    id: "00000000-0000-0000-0000-000000000001",
-    email: "joseduque@cooxupe.com.br",
-    nomeCompleto: "José Duque da Silva Neto",
-    cargo: "Administrador do Sistema",
-    papeis: ["admin"],
-  };
+  // Token inexistente, expirado, revogado ou banco indisponível nunca deve
+  // conceder acesso. Os dados dos usuários permanecem inalterados.
+  return null;
 }
 
 /**
  * Autentica usuário via e-mail e senha.
  */
 export async function entrarComEmailESenha(email: string, senha: string, manterConectado = false) {
-  let rawEmail = email.trim().toLowerCase();
+  const rawEmail = email.trim().toLowerCase();
   const days = manterConectado ? 30 : 1;
-
-  // Tratamento resiliente para variações e erros de digitação no e-mail do Administrador
-  const isJoseDuque =
-    rawEmail === "joseduque@cooxupe.com.br" ||
-    rawEmail === "jooseduque@cooxupe.com.br" ||
-    (rawEmail.includes("duque") && rawEmail.includes("cooxupe"));
-
-  if (isJoseDuque) {
-    rawEmail = "joseduque@cooxupe.com.br";
-  }
-
-  // Garantia absoluta para o login do Administrador com 123456 ou JoséDuque2026!
-  if (isJoseDuque && (senha === "123456" || senha === "JoséDuque2026!")) {
-    const sessionToken = generateToken();
-    const expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000);
-    const expiresStr = expiresAt.toISOString();
-
-    try {
-      const adminHash = await hashPassword("123456");
-      const [user] = await sql`
-        SELECT id::text FROM public.app_users WHERE lower(email::text) = 'joseduque@cooxupe.com.br'
-      `;
-
-      let adminId = "00000000-0000-0000-0000-000000000001";
-      if (!user) {
-        const [novoAdmin] = await sql`
-          INSERT INTO public.app_users (id, email, nome_completo, cargo, password_hash, status, email_verified_at)
-          VALUES (${adminId}, ${rawEmail}, 'José Duque da Silva Neto', 'Administrador do Sistema', ${adminHash}, 'active'::public.user_status, CURRENT_TIMESTAMP)
-        `;
-        await sql`
-          INSERT INTO public.user_roles (id, user_id, role)
-          VALUES ('00000000-0000-0000-0000-000000000002', ${adminId}::uuid, 'admin'::public.user_role)
-        `;
-      } else {
-        adminId = user.id;
-        await sql`
-          UPDATE public.app_users
-          SET password_hash = ${adminHash}, nome_completo = 'José Duque da Silva Neto', status = 'active'::public.user_status
-          WHERE id = ${adminId}::uuid
-        `;
-      }
-
-      const tokenHash = hashToken(sessionToken);
-      const sessionId = randomUUID();
-      await sql`
-        INSERT INTO public.user_sessions (id, user_id, session_token_hash, expires_at)
-        VALUES (${sessionId}::uuid, ${adminId}::uuid, ${tokenHash}, ${expiresStr})
-      `;
-    } catch (err) {
-      console.warn("[Auth Warning] Aviso ao gravar sessão do admin no banco. Autenticando com cookie:", err);
-    }
-
-    const adminUser: SessionUser = {
-      id: "00000000-0000-0000-0000-000000000001",
-      email: "joseduque@cooxupe.com.br",
-      nomeCompleto: "José Duque da Silva Neto",
-      cargo: "Administrador do Sistema",
-      papeis: ["admin"],
-    };
-
-    setCookieHeader(sessionToken, expiresAt);
-    return { ok: true, token: sessionToken, user: adminUser };
-  }
 
   // Tratamento padrão para outros usuários
   let user: { id: string; email: string; nome_completo?: string; cargo?: string; password_hash: string | null; status: string } | undefined;
@@ -208,16 +140,17 @@ export async function entrarComEmailESenha(email: string, senha: string, manterC
   const expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000);
   const expiresStr = expiresAt.toISOString();
 
+  const sessionTokenHash = hashToken(sessionToken);
+  const sessionId = randomUUID();
   try {
-    const sessionTokenHash = hashToken(sessionToken);
-    const sessionId = randomUUID();
     await sql`UPDATE public.app_users SET last_sign_in_at = CURRENT_TIMESTAMP WHERE id = ${user.id}::uuid`;
     await sql`
       INSERT INTO public.user_sessions (id, user_id, session_token_hash, expires_at)
       VALUES (${sessionId}::uuid, ${user.id}::uuid, ${sessionTokenHash}, ${expiresStr})
     `;
-  } catch {
-    // ignora se DB indisponível
+  } catch (err) {
+    console.error("[Auth Error] Não foi possível criar a sessão:", err);
+    throw new Error("Não foi possível iniciar sua sessão. Tente novamente.");
   }
 
   let papeis: ("admin" | "tecnico")[] = ["tecnico"];
@@ -240,7 +173,7 @@ export async function entrarComEmailESenha(email: string, senha: string, manterC
   };
 
   setCookieHeader(sessionToken, expiresAt);
-  return { ok: true, token: sessionToken, user: sessionUser };
+  return { ok: true, user: sessionUser };
 }
 
 /**
@@ -399,15 +332,16 @@ export async function definirSenhaComToken(token: string, senha: string) {
   const sessionTokenHash = hashToken(sessionToken);
   const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_DAYS * 24 * 3600 * 1000);
   const expiresStr = expiresAt.toISOString();
-  const sessionId = generateToken();
+  const sessionId = randomUUID();
 
   try {
     await sql`
       INSERT INTO public.user_sessions (id, user_id, session_token_hash, expires_at)
-      VALUES (${sessionId}, ${userId}::uuid, ${sessionTokenHash}, ${expiresStr})
+      VALUES (${sessionId}::uuid, ${userId}::uuid, ${sessionTokenHash}, ${expiresStr})
     `;
-  } catch {
-    // ignora se DB indisponível em dev
+  } catch (err) {
+    console.error("[Auth Error] Não foi possível criar a sessão após definir a senha:", err);
+    throw new Error("Senha definida, mas não foi possível iniciar a sessão. Faça login novamente.");
   }
 
   setCookieHeader(sessionToken, expiresAt);
@@ -592,8 +526,9 @@ export async function ativarContaComCodigo(email: string, codigo: string, senha:
         INSERT INTO public.user_sessions (id, user_id, session_token_hash, expires_at)
         VALUES (${sessionId}::uuid, ${invite.user_id}::uuid, ${sessionTokenHash}, ${expiresStr})
       `;
-    } catch {
-      // ignora se erro de sessao em dev
+    } catch (err) {
+      console.error("[Auth Error] Não foi possível criar a sessão após ativar a conta:", err);
+      throw new Error("Conta ativada, mas não foi possível iniciar a sessão. Faça login novamente.");
     }
 
     let papeis: ("admin" | "tecnico")[] = ["tecnico"];
@@ -616,7 +551,7 @@ export async function ativarContaComCodigo(email: string, codigo: string, senha:
     };
 
     setCookieHeader(sessionToken, expiresAt);
-    return { ok: true, token: sessionToken, user: sessionUser };
+    return { ok: true, user: sessionUser };
   } catch (err: any) {
     throw new Error(err?.message || "Não foi possível ativar a conta. Verifique o código e tente novamente.");
   }
