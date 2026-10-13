@@ -279,7 +279,7 @@ export function ExportarResultados({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => exportarResultadosExcel(itens, ctx)}>
-          <FileSpreadsheet className="size-4" /> Excel (planilha .csv)
+          <FileSpreadsheet className="size-4" /> Excel (.xlsx)
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => imprimirResultados(itens, ctx)}>
           <Printer className="size-4" /> Imprimir / salvar em PDF

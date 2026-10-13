@@ -519,7 +519,7 @@ function PaginaGestaoSistema() {
                                 onClick={() => {
                                   exportarProgramaParaExcel(
                                     programaAtual,
-                                    `Historico_${(v.nomeArquivo || "Planilha").replace(/\.[^/.]+$/, "")}.csv`,
+                                    `Historico_${(v.nomeArquivo || "Planilha").replace(/\.[^/.]+$/, "")}.xlsx`,
                                   );
                                   toast.success(`Exportando versão "${v.nomeArquivo || "Planilha"}"...`);
                                 }}

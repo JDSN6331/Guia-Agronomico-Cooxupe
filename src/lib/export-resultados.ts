@@ -1,3 +1,4 @@
+import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { copiarTexto, type DadosFichaProduto } from "./share-utils";
 
@@ -44,20 +45,8 @@ function escaparHtml(valor: unknown) {
     .replace(/"/g, "&quot;");
 }
 
-function baixarArquivo(conteudo: string, nome: string, mime: string) {
-  const blob = new Blob([conteudo], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = nome;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
 /**
- * Exporta todos os resultados para um CSV (separador ";" + BOM) que o Excel abre direto.
+ * Exporta todos os resultados da busca diretamente em uma planilha Excel nativa (.xlsx).
  */
 export function exportarResultadosExcel(itens: ItemExportavel[], ctx: ContextoExportacao) {
   if (itens.length === 0) {
@@ -75,53 +64,51 @@ export function exportarResultadosExcel(itens: ItemExportavel[], ctx: ContextoEx
   const temDosagemUnica = itens.some((i) => Boolean(i.dosagemUnica));
   const temTermos = ctx.termos.length > 0;
 
-  const escapar = (val?: string | number | null) => {
-    if (val === undefined || val === null) return '""';
-    return `"${String(val).replace(/"/g, '""')}"`;
-  };
+  const linhas = itens.map((i) => {
+    const row: Record<string, string> = {
+      Cultura: i.cultura || "",
+      Produto: i.titulo || "",
+      "Ingrediente Ativo / Composição": limpar(i.ingrediente),
+      Fornecedor: limpar(i.fornecedor),
+      Grupo: limpar(i.grupo),
+      "Família": limpar(i.familia),
+    };
 
-  const cabecalho = [
-    "Cultura",
-    "Produto",
-    "Ingrediente Ativo / Composição",
-    "Fornecedor",
-    "Grupo",
-    "Família",
-    ...estagios.map((e) => `Dosagem ${e}`),
-    ...(temDosagemUnica ? ["Dosagem"] : []),
-    "Função Agronômica",
-    "Instruções de Aplicação",
-    "Carência",
-    ...(temTermos ? ["Termos da busca encontrados"] : []),
-  ];
+    for (const est of estagios) {
+      row[`Dosagem ${est}`] = i.dosagens?.[est] || "";
+    }
+    if (temDosagemUnica) {
+      row["Dosagem"] = i.dosagemUnica || "";
+    }
 
-  const linhas = itens.map((i) => [
-    i.cultura,
-    i.titulo,
-    limpar(i.ingrediente),
-    limpar(i.fornecedor),
-    limpar(i.grupo),
-    limpar(i.familia),
-    ...estagios.map((e) => i.dosagens?.[e]),
-    ...(temDosagemUnica ? [i.dosagemUnica] : []),
-    limpar(i.funcao),
-    limpar(i.instrucoes),
-    textoCarencia(i.carencia),
-    ...(temTermos ? [(i.encontradoPor ?? []).join(" | ")] : []),
-  ]);
+    row["Função Agronômica"] = limpar(i.funcao);
+    row["Instruções de Aplicação"] = limpar(i.instrucoes);
+    row["Carência"] = textoCarencia(i.carencia);
+    if (temTermos) {
+      row["Termos da busca encontrados"] = (i.encontradoPor ?? []).join(" | ");
+    }
+    return row;
+  });
 
-  const sep = ";";
-  const corpo = [
-    `AGROBASE - RESULTADOS DA BUSCA (${ctx.rotulo.toUpperCase()}) - ${dataHoje()}`,
-    ...(temTermos ? [`Termos pesquisados: ${ctx.termos.join(" | ")}`] : []),
-    "",
-    cabecalho.map(escapar).join(sep),
-    ...linhas.map((l) => l.map(escapar).join(sep)),
-  ];
+  const worksheet = XLSX.utils.json_to_sheet(linhas);
 
-  const nome = `Resultados_${semAcento(ctx.rotulo) || "Busca"}_${dataHoje()}.csv`;
-  baixarArquivo("\uFEFF" + corpo.join("\r\n"), nome, "text/csv;charset=utf-8;");
-  toast.success(`${itens.length} ${itens.length === 1 ? "item exportado" : "itens exportados"} para Excel.`);
+  if (linhas.length > 0) {
+    worksheet["!cols"] = Object.keys(linhas[0] || {}).map((key) => {
+      const maxLen = Math.max(
+        key.length,
+        ...linhas.map((r) => String((r as any)[key] || "").length),
+      );
+      return { wch: Math.min(Math.max(maxLen + 2, 12), 48) };
+    });
+  }
+
+  const workbook = XLSX.utils.book_new();
+  const nomeAba = (ctx.rotulo || "Produtos").slice(0, 31);
+  XLSX.utils.book_append_sheet(workbook, worksheet, nomeAba);
+
+  const nomeArquivo = `Resultados_${semAcento(ctx.rotulo) || "Busca"}_${dataHoje()}.xlsx`;
+  XLSX.writeFile(workbook, nomeArquivo);
+  toast.success(`${itens.length} ${itens.length === 1 ? "item exportado" : "itens exportados"} para Excel (.xlsx).`);
 }
 
 function formatarItemTexto(p: ItemExportavel): string {

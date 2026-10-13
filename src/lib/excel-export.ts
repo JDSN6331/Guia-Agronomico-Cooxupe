@@ -1,114 +1,72 @@
+import * as XLSX from "xlsx";
 import type { ProgramaData } from "./programa-store";
 
 export function exportarProgramaParaExcel(programa: ProgramaData, nomeArquivoCustomizado?: string) {
-  const BOM = "\uFEFF";
-  const sep = ";";
+  const workbook = XLSX.utils.book_new();
 
-  const escapeCSV = (val?: string | number | null) => {
-    if (val === undefined || val === null) return '""';
-    const s = String(val).replace(/"/g, '""');
-    return `"${s}"`;
-  };
+  // Aba 1: CATÁLOGO CAFÉ
+  const linhasCafe = (programa.cafe || []).map((c) => ({
+    ID: c.id,
+    Produto: c.produto,
+    "Ingrediente Ativo": c.ingrediente || "",
+    Fornecedor: c.fornecedor || "",
+    Grupo: c.grupo || "",
+    "Família": c.familia || "",
+    "Dosagem Viveiro": c.dosagens?.["Viveiro"] || "",
+    "Dosagem Plantio": c.dosagens?.["Plantio"] || "",
+    "Dosagem 1 Ano / Recepa": c.dosagens?.["1 ano / Recepa"] || "",
+    "Dosagem Em Produção": c.dosagens?.["Em Produção"] || "",
+    "Dosagem Esqueletado / Decotado": c.dosagens?.["Esqueletado / Decotado"] || "",
+    "Função Agronômica": c.funcao || "",
+    "Instruções de Aplicação": c.instrucoes || "",
+    "Carência (Dias)": c.carencia || "",
+  }));
 
-  const linhas: string[] = [];
+  const sheetCafe = XLSX.utils.json_to_sheet(linhasCafe);
+  if (linhasCafe.length > 0) {
+    sheetCafe["!cols"] = Object.keys(linhasCafe[0] || {}).map((key) => {
+      const maxLen = Math.max(
+        key.length,
+        ...linhasCafe.map((r) => String((r as any)[key] || "").length),
+      );
+      return { wch: Math.min(Math.max(maxLen + 2, 12), 48) };
+    });
+  }
+  XLSX.utils.book_append_sheet(workbook, sheetCafe, "Catálogo Café");
 
-  // Seção 1: CATÁLOGO CAFÉ
-  linhas.push("PROGRAMA DE MANEJO AGROBASE - CATÁLOGO CAFÉ");
-  linhas.push(
-    [
-      "ID",
-      "Produto",
-      "Ingrediente Ativo",
-      "Fornecedor",
-      "Grupo",
-      "Família",
-      "Dosagem Viveiro",
-      "Dosagem Plantio",
-      "Dosagem 1 Ano / Recepa",
-      "Dosagem Em Produção",
-      "Dosagem Esqueletado / Decotado",
-      "Função Agronômica",
-      "Instruções de Aplicação",
-      "Carência (Dias)",
-    ]
-      .map(escapeCSV)
-      .join(sep),
-  );
+  // Aba 2: MILHO E SOJA
+  const linhasMilhoSoja = (programa.milhoSoja || []).map((ms) => ({
+    ID: ms.id,
+    Produto: ms.produto,
+    Cultura: ms.cultura || "",
+    Fornecedor: ms.fornecedor || "",
+    Grupo: ms.grupo || "",
+    "Família": ms.familia || "",
+    Dosagem: ms.dosagem || "",
+    "Composição / Ingrediente": ms.composicao || "",
+    "Função Agronômica": ms.funcao || "",
+    "Instruções de Aplicação": ms.instrucoes || "",
+    "Carência (Dias)": ms.carencia || "",
+  }));
 
-  (programa.cafe || []).forEach((c) => {
-    linhas.push(
-      [
-        c.id,
-        c.produto,
-        c.ingrediente,
-        c.fornecedor,
-        c.grupo,
-        c.familia,
-        c.dosagens?.["Viveiro"],
-        c.dosagens?.["Plantio"],
-        c.dosagens?.["1 ano / Recepa"],
-        c.dosagens?.["Em Produção"],
-        c.dosagens?.["Esqueletado / Decotado"],
-        c.funcao,
-        c.instrucoes,
-        c.carencia,
-      ]
-        .map(escapeCSV)
-        .join(sep),
-    );
-  });
+  const sheetMilhoSoja = XLSX.utils.json_to_sheet(linhasMilhoSoja);
+  if (linhasMilhoSoja.length > 0) {
+    sheetMilhoSoja["!cols"] = Object.keys(linhasMilhoSoja[0] || {}).map((key) => {
+      const maxLen = Math.max(
+        key.length,
+        ...linhasMilhoSoja.map((r) => String((r as any)[key] || "").length),
+      );
+      return { wch: Math.min(Math.max(maxLen + 2, 12), 48) };
+    });
+  }
+  XLSX.utils.book_append_sheet(workbook, sheetMilhoSoja, "Milho e Soja");
 
-  linhas.push("");
-  linhas.push("");
+  let nomeFinal = nomeArquivoCustomizado || `Programa_Manejo_AgroBase_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  if (nomeFinal.endsWith(".csv")) {
+    nomeFinal = nomeFinal.replace(/\.csv$/i, ".xlsx");
+  } else if (!nomeFinal.endsWith(".xlsx")) {
+    nomeFinal = `${nomeFinal}.xlsx`;
+  }
 
-  // Seção 2: MILHO E SOJA
-  linhas.push("PROGRAMA DE MANEJO AGROBASE - MILHO E SOJA");
-  linhas.push(
-    [
-      "ID",
-      "Produto",
-      "Cultura",
-      "Fornecedor",
-      "Grupo",
-      "Família",
-      "Dosagem",
-      "Composição / Ingrediente",
-      "Função Agronômica",
-      "Instruções de Aplicação",
-      "Carência (Dias)",
-    ]
-      .map(escapeCSV)
-      .join(sep),
-  );
-
-  (programa.milhoSoja || []).forEach((ms) => {
-    linhas.push(
-      [
-        ms.id,
-        ms.produto,
-        ms.cultura,
-        ms.fornecedor,
-        ms.grupo,
-        ms.familia,
-        ms.dosagem,
-        ms.composicao,
-        ms.funcao,
-        ms.instrucoes,
-        ms.carencia,
-      ]
-        .map(escapeCSV)
-        .join(sep),
-    );
-  });
-
-  const content = BOM + linhas.join("\r\n");
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = nomeArquivoCustomizado || `Programa_Manejo_AgroBase_${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  XLSX.writeFile(workbook, nomeFinal);
 }
