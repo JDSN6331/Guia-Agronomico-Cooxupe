@@ -12,7 +12,10 @@ import {
   validarTokenConvite,
 } from "./auth.server";
 
-export const obterSessaoFn = createServerFn({ method: "GET" }).handler(async () => {
+// POST de propósito: a URL da server function é igual para todos os usuários e
+// uma resposta GET poderia ser reaproveitada por cache de navegador/proxy/CDN,
+// entregando a sessão de outra pessoa.
+export const obterSessaoFn = createServerFn({ method: "POST" }).handler(async () => {
   const user = await getSessionUser();
   return { user };
 });

@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { AcoesFichaProduto, BarraFiltros, Campo, Carencia, VazioResultado } from "@/components/catalogo";
+import {
+  AcoesFichaProduto,
+  BarraFiltros,
+  Campo,
+  Carencia,
+  ExportarResultados,
+  VazioResultado,
+} from "@/components/catalogo";
 import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
@@ -9,7 +16,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { buscaEm, programa, unicos, type ProdutoMilhoSoja } from "@/data/programa";
+import {
+  buscaEm,
+  buscaMultipla,
+  programa,
+  termosEfetivos,
+  termosQueCasam,
+  unicos,
+  type ProdutoMilhoSoja,
+} from "@/data/programa";
+import type { ItemExportavel } from "@/lib/export-resultados";
 import { FlaticonCornSoy } from "@/components/flaticon-icons";
 
 export const Route = createFileRoute("/_authenticated/milho-soja")({
@@ -31,8 +47,19 @@ export const Route = createFileRoute("/_authenticated/milho-soja")({
   component: PaginaMilhoSoja,
 });
 
+const camposBusca = (p: ProdutoMilhoSoja) => [
+  p.produto,
+  p.fornecedor,
+  p.grupo,
+  p.familia,
+  p.cultura,
+  p.funcao,
+  p.composicao,
+];
+
 function PaginaMilhoSoja() {
   const [termo, setTermo] = useState("");
+  const [termos, setTermos] = useState<string[]>([]);
   const [familia, setFamilia] = useState("todos");
   const [fornecedor, setFornecedor] = useState("todos");
   const [cultura, setCultura] = useState("todos");
@@ -41,16 +68,53 @@ function PaginaMilhoSoja() {
   const fornecedores = useMemo(() => unicos(programa.milhoSoja.map((p) => p.fornecedor)), []);
   const culturas = useMemo(() => unicos(programa.milhoSoja.map((p) => p.cultura)), []);
 
-  const lista = useMemo(
+  // Termos confirmados (chips) + o que ainda está sendo digitado
+  const termosBusca = useMemo(() => termosEfetivos(termos, termo), [termos, termo]);
+
+  // Itens que passam pelos filtros (sem considerar a busca por texto)
+  const baseFiltrada = useMemo(
     () =>
       programa.milhoSoja.filter(
         (p) =>
           (familia === "todos" || p.familia === familia) &&
           (fornecedor === "todos" || p.fornecedor === fornecedor) &&
-          (cultura === "todos" || p.cultura === cultura) &&
-          buscaEm(termo, [p.produto, p.fornecedor, p.grupo, p.familia, p.cultura, p.funcao, p.composicao]),
+          (cultura === "todos" || p.cultura === cultura),
       ),
-    [termo, familia, fornecedor, cultura],
+    [familia, fornecedor, cultura],
+  );
+
+  // Encontra o produto se QUALQUER um dos termos casar
+  const lista = useMemo(
+    () => baseFiltrada.filter((p) => buscaMultipla(termosBusca, camposBusca(p))),
+    [baseFiltrada, termosBusca],
+  );
+
+  // Quantos itens cada termo encontrou (alerta quando algum não encontra nada)
+  const contagens = useMemo(
+    () =>
+      Object.fromEntries(
+        termosBusca.map((t) => [t, baseFiltrada.filter((p) => buscaEm(t, camposBusca(p))).length]),
+      ) as Record<string, number>,
+    [baseFiltrada, termosBusca],
+  );
+
+  // Todos os resultados prontos para exportar de uma vez
+  const itensExportacao = useMemo<ItemExportavel[]>(
+    () =>
+      lista.map((p) => ({
+        titulo: p.produto,
+        cultura: p.cultura || "Milho / Soja",
+        ingrediente: p.composicao,
+        fornecedor: p.fornecedor,
+        grupo: p.grupo,
+        familia: p.familia,
+        dosagemUnica: p.dosagem,
+        funcao: p.funcao,
+        instrucoes: p.instrucoes,
+        carencia: p.carencia,
+        encontradoPor: termosQueCasam(termosBusca, camposBusca(p)),
+      })),
+    [lista, termosBusca],
   );
 
   return (
@@ -62,6 +126,10 @@ function PaginaMilhoSoja() {
         <BarraFiltros
           termo={termo}
           onTermo={setTermo}
+          termos={termos}
+          onTermos={setTermos}
+          contagens={contagens}
+          acoes={<ExportarResultados itens={itensExportacao} termos={termosBusca} rotulo="Milho e Soja" />}
           placeholder="Buscar por produto, ingrediente ativo, fornecedor ou função (alvo)..."
           total={programa.milhoSoja.length}
           exibidos={lista.length}
@@ -85,7 +153,15 @@ function PaginaMilhoSoja() {
         />
 
         {lista.length === 0 ? (
-          <VazioResultado onLimpar={() => { setTermo(""); setFamilia("todos"); setFornecedor("todos"); setCultura("todos"); }} />
+          <VazioResultado
+            onLimpar={() => {
+              setTermo("");
+              setTermos([]);
+              setFamilia("todos");
+              setFornecedor("todos");
+              setCultura("todos");
+            }}
+          />
         ) : (
           <Accordion type="multiple" className="space-y-3">
             {lista.map((p) => (

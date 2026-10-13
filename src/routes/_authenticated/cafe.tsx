@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { AcoesFichaProduto, BarraFiltros, Campo, Carencia, VazioResultado } from "@/components/catalogo";
+import {
+  AcoesFichaProduto,
+  BarraFiltros,
+  Campo,
+  Carencia,
+  ExportarResultados,
+  VazioResultado,
+} from "@/components/catalogo";
 import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
@@ -9,7 +16,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { buscaEm, programa, unicos, type ProdutoCafe } from "@/data/programa";
+import {
+  buscaEm,
+  buscaMultipla,
+  programa,
+  termosEfetivos,
+  termosQueCasam,
+  unicos,
+  type ProdutoCafe,
+} from "@/data/programa";
+import type { ItemExportavel } from "@/lib/export-resultados";
 import { FlaticonCoffee } from "@/components/flaticon-icons";
 
 export const Route = createFileRoute("/_authenticated/cafe")({
@@ -39,8 +55,18 @@ const ESTAGIOS = [
   "Esqueletado / Decotado",
 ] as const;
 
+const camposBusca = (p: ProdutoCafe) => [
+  p.produto,
+  p.ingrediente,
+  p.fornecedor,
+  p.grupo,
+  p.familia,
+  p.funcao,
+];
+
 function PaginaCafe() {
   const [termo, setTermo] = useState("");
+  const [termos, setTermos] = useState<string[]>([]);
   const [familia, setFamilia] = useState("todos");
   const [fornecedor, setFornecedor] = useState("todos");
   const [estagio, setEstagio] = useState("todos");
@@ -48,16 +74,53 @@ function PaginaCafe() {
   const familias = useMemo(() => unicos(programa.cafe.map((p) => p.familia)), []);
   const fornecedores = useMemo(() => unicos(programa.cafe.map((p) => p.fornecedor)), []);
 
-  const lista = useMemo(
+  // Termos confirmados (chips) + o que ainda está sendo digitado
+  const termosBusca = useMemo(() => termosEfetivos(termos, termo), [termos, termo]);
+
+  // Itens que passam pelos filtros (sem considerar a busca por texto)
+  const baseFiltrada = useMemo(
     () =>
       programa.cafe.filter(
         (p) =>
           (familia === "todos" || p.familia === familia) &&
           (fornecedor === "todos" || p.fornecedor === fornecedor) &&
-          (estagio === "todos" || (Boolean(p.dosagens[estagio]) && p.dosagens[estagio] !== "NA")) &&
-          buscaEm(termo, [p.produto, p.ingrediente, p.fornecedor, p.grupo, p.familia, p.funcao]),
+          (estagio === "todos" || (Boolean(p.dosagens[estagio]) && p.dosagens[estagio] !== "NA")),
       ),
-    [termo, familia, fornecedor, estagio],
+    [familia, fornecedor, estagio],
+  );
+
+  // Encontra o produto se QUALQUER um dos termos casar
+  const lista = useMemo(
+    () => baseFiltrada.filter((p) => buscaMultipla(termosBusca, camposBusca(p))),
+    [baseFiltrada, termosBusca],
+  );
+
+  // Quantos itens cada termo encontrou (alerta quando algum não encontra nada)
+  const contagens = useMemo(
+    () =>
+      Object.fromEntries(
+        termosBusca.map((t) => [t, baseFiltrada.filter((p) => buscaEm(t, camposBusca(p))).length]),
+      ) as Record<string, number>,
+    [baseFiltrada, termosBusca],
+  );
+
+  // Todos os resultados prontos para exportar de uma vez
+  const itensExportacao = useMemo<ItemExportavel[]>(
+    () =>
+      lista.map((p) => ({
+        titulo: p.produto,
+        cultura: "Café",
+        ingrediente: p.ingrediente,
+        fornecedor: p.fornecedor,
+        grupo: p.grupo,
+        familia: p.familia,
+        dosagens: p.dosagens,
+        funcao: p.funcao,
+        instrucoes: p.instrucoes,
+        carencia: p.carencia,
+        encontradoPor: termosQueCasam(termosBusca, camposBusca(p)),
+      })),
+    [lista, termosBusca],
   );
 
   return (
@@ -69,6 +132,10 @@ function PaginaCafe() {
         <BarraFiltros
           termo={termo}
           onTermo={setTermo}
+          termos={termos}
+          onTermos={setTermos}
+          contagens={contagens}
+          acoes={<ExportarResultados itens={itensExportacao} termos={termosBusca} rotulo="Café" />}
           placeholder="Buscar por produto, ingrediente ativo, fornecedor ou função (alvo)..."
           total={programa.cafe.length}
           exibidos={lista.length}
@@ -92,7 +159,15 @@ function PaginaCafe() {
         />
 
         {lista.length === 0 ? (
-          <VazioResultado onLimpar={() => { setTermo(""); setFamilia("todos"); setFornecedor("todos"); setEstagio("todos"); }} />
+          <VazioResultado
+            onLimpar={() => {
+              setTermo("");
+              setTermos([]);
+              setFamilia("todos");
+              setFornecedor("todos");
+              setEstagio("todos");
+            }}
+          />
         ) : (
           <Accordion type="multiple" className="space-y-3">
             {lista.map((p) => (

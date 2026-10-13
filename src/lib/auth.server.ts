@@ -19,6 +19,43 @@ export type SessionUser = {
 
 const SESSION_COOKIE_NAME = "agri_hub_session";
 const SESSION_EXPIRATION_DAYS = 30;
+const SESSION_SHORT_HOURS = 12;
+
+/**
+ * Lê o token de sessão enviado pelo navegador no cookie HTTP-Only.
+ */
+function lerTokenDoCookie(): string | undefined {
+  try {
+    const cookieHeader = getRequest()?.headers.get("cookie");
+    if (!cookieHeader) return undefined;
+    for (const parte of cookieHeader.split(";")) {
+      const [k, ...v] = parte.trim().split("=");
+      if (k === SESSION_COOKIE_NAME) return v.join("=") || undefined;
+    }
+  } catch {
+    // fora de contexto HTTP request
+  }
+  return undefined;
+}
+
+/**
+ * Revoga a sessão que o navegador já possuía (se houver). Chamado sempre que uma
+ * nova sessão é criada, para que um login nunca deixe a sessão de outro usuário
+ * válida naquele mesmo navegador.
+ */
+async function revogarSessaoDoNavegador() {
+  const token = lerTokenDoCookie();
+  if (!token) return;
+  try {
+    await sql`
+      UPDATE public.user_sessions
+      SET revoked_at = CURRENT_TIMESTAMP
+      WHERE session_token_hash = ${hashToken(token)} AND revoked_at IS NULL
+    `;
+  } catch (err) {
+    console.warn("[Auth Warning] Não foi possível revogar a sessão anterior:", err);
+  }
+}
 
 /**
  * Retorna a sessão ativa a partir do cookie de sessão HTTP-Only ou header Authorization.
@@ -100,7 +137,9 @@ export async function getSessionUser(): Promise<SessionUser | null> {
  */
 export async function entrarComEmailESenha(email: string, senha: string, manterConectado = false) {
   const rawEmail = email.trim().toLowerCase();
-  const days = manterConectado ? 30 : 1;
+  const duracaoMs = manterConectado
+    ? SESSION_EXPIRATION_DAYS * 24 * 3600 * 1000
+    : SESSION_SHORT_HOURS * 3600 * 1000;
 
   // Tratamento padrão para outros usuários
   let user: { id: string; email: string; nome_completo?: string; cargo?: string; password_hash: string | null; status: string } | undefined;
@@ -135,9 +174,12 @@ export async function entrarComEmailESenha(email: string, senha: string, manterC
     throw new Error("Sua conta está desativada. Entre em contato com o suporte.");
   }
 
+  // Encerra qualquer sessão anterior deste navegador antes de abrir a nova
+  await revogarSessaoDoNavegador();
+
   // Criar nova sessão
   const sessionToken = generateToken();
-  const expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000);
+  const expiresAt = new Date(Date.now() + duracaoMs);
   const expiresStr = expiresAt.toISOString();
 
   const sessionTokenHash = hashToken(sessionToken);
@@ -172,7 +214,7 @@ export async function entrarComEmailESenha(email: string, senha: string, manterC
     papeis,
   };
 
-  setCookieHeader(sessionToken, expiresAt);
+  setCookieHeader(sessionToken, expiresAt, manterConectado);
   return { ok: true, user: sessionUser };
 }
 
@@ -181,24 +223,14 @@ export async function entrarComEmailESenha(email: string, senha: string, manterC
  */
 export async function encerrarSessao() {
   try {
-    const request = getRequest();
-    const cookieHeader = request?.headers.get("cookie");
-    if (cookieHeader) {
-      const cookies = Object.fromEntries(
-        cookieHeader.split(";").map((c) => {
-          const [k, ...v] = c.trim().split("=");
-          return [k, v.join("=")];
-        }),
-      );
-      const sessionToken = cookies[SESSION_COOKIE_NAME];
-      if (sessionToken) {
-        const tokenHash = hashToken(sessionToken);
-        await sql`
-          UPDATE public.user_sessions
-          SET revoked_at = CURRENT_TIMESTAMP
-          WHERE session_token_hash = ${tokenHash}
-        `;
-      }
+    const sessionToken = lerTokenDoCookie();
+    if (sessionToken) {
+      const tokenHash = hashToken(sessionToken);
+      await sql`
+        UPDATE public.user_sessions
+        SET revoked_at = CURRENT_TIMESTAMP
+        WHERE session_token_hash = ${tokenHash}
+      `;
     }
   } catch {
     // ignora erros se fora do contexto de requisição
@@ -327,10 +359,11 @@ export async function definirSenhaComToken(token: string, senha: string) {
     WHERE id = ${userId}::uuid
   `;
 
-  // Criar sessão automaticamente e logar
+  // Criar sessão automaticamente e logar (encerrando antes a sessão anterior do navegador)
+  await revogarSessaoDoNavegador();
   const sessionToken = generateToken();
   const sessionTokenHash = hashToken(sessionToken);
-  const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_DAYS * 24 * 3600 * 1000);
+  const expiresAt = new Date(Date.now() + SESSION_SHORT_HOURS * 3600 * 1000);
   const expiresStr = expiresAt.toISOString();
   const sessionId = randomUUID();
 
@@ -344,7 +377,7 @@ export async function definirSenhaComToken(token: string, senha: string) {
     throw new Error("Senha definida, mas não foi possível iniciar a sessão. Faça login novamente.");
   }
 
-  setCookieHeader(sessionToken, expiresAt);
+  setCookieHeader(sessionToken, expiresAt, false);
 
   return { ok: true };
 }
@@ -514,10 +547,11 @@ export async function ativarContaComCodigo(email: string, codigo: string, senha:
       WHERE id = ${invite.user_id}::uuid
     `;
 
-    // Iniciar sessão automaticamente
+    // Iniciar sessão automaticamente (encerrando antes a sessão anterior do navegador)
+    await revogarSessaoDoNavegador();
     const sessionToken = generateToken();
     const sessionTokenHash = hashToken(sessionToken);
-    const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_DAYS * 24 * 3600 * 1000);
+    const expiresAt = new Date(Date.now() + SESSION_SHORT_HOURS * 3600 * 1000);
     const expiresStr = expiresAt.toISOString();
     const sessionId = randomUUID();
 
@@ -550,14 +584,19 @@ export async function ativarContaComCodigo(email: string, codigo: string, senha:
       papeis,
     };
 
-    setCookieHeader(sessionToken, expiresAt);
+    setCookieHeader(sessionToken, expiresAt, false);
     return { ok: true, user: sessionUser };
   } catch (err: any) {
     throw new Error(err?.message || "Não foi possível ativar a conta. Verifique o código e tente novamente.");
   }
 }
 
-function setCookieHeader(token: string, expiresAt: Date) {
+/**
+ * Grava o cookie de sessão. Com `persistente = false` o cookie não recebe
+ * Expires/Max-Age ("cookie de sessão"): o navegador o descarta ao ser fechado,
+ * evitando que a próxima pessoa a usar o computador entre na conta anterior.
+ */
+function setCookieHeader(token: string, expiresAt: Date, persistente = true) {
   let isSecure = false;
   try {
     const request = getRequest();
@@ -570,9 +609,13 @@ function setCookieHeader(token: string, expiresAt: Date) {
     // fallback
   }
 
-  const cookieValue = `${SESSION_COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; ${
-    isSecure ? "Secure; " : ""
-  }Expires=${expiresAt.toUTCString()}`;
+  const maxAge = Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
+  const validade = persistente
+    ? `; Expires=${expiresAt.toUTCString()}; Max-Age=${maxAge}`
+    : "";
+  const cookieValue = `${SESSION_COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax${
+    isSecure ? "; Secure" : ""
+  }${validade}`;
   try {
     setResponseHeader("Set-Cookie", cookieValue);
   } catch {

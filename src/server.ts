@@ -44,12 +44,41 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+/**
+ * Respostas dinâmicas (páginas e server functions) dependem do cookie de sessão.
+ * Elas nunca podem ser armazenadas por navegador, proxy ou CDN, senão a sessão de
+ * um usuário poderia ser entregue a outro. Arquivos estáticos (/assets, /public)
+ * são servidos pelo Nitro antes de chegar aqui e continuam com cache normal.
+ */
+function aplicarCabecalhosSemCache(response: Response): Response {
+  const proibirCache = (headers: Headers) => {
+    headers.set("Cache-Control", "private, no-store, no-cache, must-revalidate, max-age=0");
+    headers.set("Pragma", "no-cache");
+    headers.set("Expires", "0");
+    headers.append("Vary", "Cookie");
+  };
+
+  try {
+    proibirCache(response.headers);
+    return response;
+  } catch {
+    // Headers imutáveis: recria a resposta preservando corpo, status e cookies.
+    const headers = new Headers(response.headers);
+    proibirCache(headers);
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return aplicarCabecalhosSemCache(await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

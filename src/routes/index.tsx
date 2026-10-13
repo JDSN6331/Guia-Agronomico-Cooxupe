@@ -46,7 +46,8 @@ function Login() {
   const [codigoAtivacao, setCodigoAtivacao] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
-  const [manterConectado, setManterConectado] = useState(true);
+  // Desmarcado por padrão: em computador compartilhado a sessão não deve ficar aberta.
+  const [manterConectado, setManterConectado] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [modo, setModo] = useState<"login" | "cadastrar" | "ativar" | "recuperar">("login");

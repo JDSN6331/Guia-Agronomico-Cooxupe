@@ -74,6 +74,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void carregarSessao();
   }, [carregarSessao]);
 
+  // Revalida a identidade quando a aba volta ao foco. O cookie de sessão é compartilhado
+  // entre abas: se outra aba trocou de usuário ou encerrou a sessão, esta aba nunca deve
+  // continuar exibindo (e agindo como) a conta anterior.
+  const usuarioAtualId = user?.id ?? null;
+  useEffect(() => {
+    if (!usuarioAtualId) return;
+
+    let ultimaVerificacao = Date.now();
+    const revalidar = async () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - ultimaVerificacao < 3000) return;
+      ultimaVerificacao = Date.now();
+
+      const operacao = operacaoAtual.current;
+      try {
+        const res = await obterSessaoFn();
+        if (operacao !== operacaoAtual.current) return; // login/logout em andamento
+        const novo = res?.user ?? null;
+        if (!novo) {
+          setUser(null);
+          setPapeis([]);
+          return;
+        }
+        setUser((atual) =>
+          atual && atual.id === novo.id && atual.email === novo.email
+            ? atual
+            : {
+                id: novo.id,
+                email: novo.email,
+                nomeCompleto: novo.nomeCompleto,
+                cargo: novo.cargo,
+              },
+        );
+        const novosPapeis = (novo.papeis || []) as Papel[];
+        setPapeis((atuais) =>
+          atuais.length === novosPapeis.length && atuais.every((p, i) => p === novosPapeis[i])
+            ? atuais
+            : novosPapeis,
+        );
+      } catch {
+        // falha de rede: mantém o estado atual
+      }
+    };
+
+    window.addEventListener("focus", revalidar);
+    document.addEventListener("visibilitychange", revalidar);
+    return () => {
+      window.removeEventListener("focus", revalidar);
+      document.removeEventListener("visibilitychange", revalidar);
+    };
+  }, [usuarioAtualId]);
+
   const entrar = useCallback(
     async (email: string, senha: string, manterConectado = false) => {
       const operacao = ++operacaoAtual.current;

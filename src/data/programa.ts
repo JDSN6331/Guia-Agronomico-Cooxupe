@@ -36,6 +36,46 @@ export function buscaEm(termo: string, campos: (string | undefined)[]): boolean 
     .every((palavra) => alvo.includes(palavra));
 }
 
+/**
+ * Separadores aceitos ao colar uma lista: ponto e vírgula, barra vertical, quebra de linha,
+ * tabulação e vírgula seguida de espaço (para não quebrar números como "1,5").
+ */
+const SEPARADOR_TERMOS = /[;|\n\r\t]+|,(?=\s|$)/;
+
+/** Quebra um texto digitado/colado em termos individuais, sem vazios nem repetidos. */
+export function separarTermos(texto: string): string[] {
+  const vistos = new Set<string>();
+  const termos: string[] = [];
+  for (const parte of texto.split(SEPARADOR_TERMOS)) {
+    const termo = parte.trim().replace(/\s+/g, " ");
+    const chave = normalizar(termo);
+    if (!termo || vistos.has(chave)) continue;
+    vistos.add(chave);
+    termos.push(termo);
+  }
+  return termos;
+}
+
+/** Une termos já confirmados com o texto em digitação, ignorando repetições. */
+export function termosEfetivos(termos: string[], digitando: string): string[] {
+  return separarTermos([...termos, digitando].join(";"));
+}
+
+/**
+ * Busca com vários termos: o item é encontrado se casar com QUALQUER um deles (OU).
+ * Dentro de cada termo, todas as palavras precisam aparecer (E), como em `buscaEm`.
+ * Sem termos, tudo é considerado encontrado.
+ */
+export function buscaMultipla(termos: string[], campos: (string | undefined)[]): boolean {
+  if (termos.length === 0) return true;
+  return termos.some((termo) => buscaEm(termo, campos));
+}
+
+/** Retorna quais termos casam com o item (usado para contagem e para a coluna do export). */
+export function termosQueCasam(termos: string[], campos: (string | undefined)[]): string[] {
+  return termos.filter((termo) => buscaEm(termo, campos));
+}
+
 export const totais = {
   cafe: programa.cafe?.length || 0,
   milhoSoja: programa.milhoSoja?.length || 0,
