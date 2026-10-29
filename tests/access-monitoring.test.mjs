@@ -15,6 +15,7 @@ const createService = new Function(
   "sql",
   "getSessionUser",
   "Date",
+  "ensureMonitoringReady",
   source + "\nreturn { registrarPresenca, listarMonitoramento, listarSessoes, utcIso };",
 );
 const user = "10000000-0000-0000-0000-000000000001";
@@ -59,7 +60,7 @@ function fixture() {
   return {
     db,
     session,
-    service: createService(sql, auth, Clock),
+    service: createService(sql, auth, Clock, async () => {}),
     advance: (seconds) => {
       now += seconds * 1000;
     },
@@ -180,4 +181,90 @@ test("relatórios exigem sessão de administrador antes de consultar dados", asy
   await service.listarMonitoramentoFn();
   await service.listarSessoesFn({ data: { userId: user, page: 0 } });
   assert.equal(queries, 2);
+});
+
+// Exercita a inicialização real do módulo com um pool simulado, sem DATABASE_URL real.
+const databaseModule = stripTypeScriptTypes(dbSource)
+  .replace(/^import .*;$/gm, "")
+  .replace(/^export /gm, "");
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+const loadDatabase = new AsyncFunction(
+  "postgres",
+  "path",
+  "fs",
+  "process",
+  "scryptSync",
+  "console",
+  databaseModule + "\nreturn { sql, ensureMonitoringReady };",
+);
+const migration = readFileSync(
+  new URL("../database/migrations/003_session_activity.sql", import.meta.url),
+  "utf8",
+);
+async function productionFixture(failure) {
+  const events = [];
+  const pool = async () => {
+    events.push("query");
+    return [{ id: user, email: "usuario-existente@teste.local" }];
+  };
+  pool.unsafe = () => {
+    throw new Error("UNSAFE_TRANSACTION: pool não reservado");
+  };
+  pool.begin = async (callback) => {
+    events.push("begin");
+    try {
+      await callback({
+        unsafe: async (query) => {
+          const statements = query.replace(/--.*$/gm, "");
+          assert.doesNotMatch(
+            statements,
+            /(?:^|;)\s*(BEGIN|COMMIT|ROLLBACK|DELETE|UPDATE|INSERT|DROP|TRUNCATE|ALTER)\b/i,
+          );
+          assert.match(statements, /CREATE TABLE IF NOT EXISTS public.user_session_activity/);
+          if (failure) throw failure;
+          events.push("migration");
+        },
+      });
+      events.push("commit");
+    } catch (error) {
+      events.push("rollback");
+      throw error;
+    }
+  };
+  const database = await loadDatabase(
+    (_url, options) => {
+      assert.equal(options.max, 10);
+      return pool;
+    },
+    { join: (...parts) => parts.join("/") },
+    { readFileSync: () => migration },
+    {
+      env: { NODE_ENV: "production", DATABASE_URL: "postgres://unused.invalid/test" },
+      cwd: () => "/app",
+    },
+    () => {
+      throw new Error("seed não deve executar");
+    },
+    { error: () => {} },
+  );
+  return { database, events };
+}
+
+test("migração usa conexão reservada por begin() sem BEGIN manual no pool", async () => {
+  const { database, events } = await productionFixture();
+  await database.ensureMonitoringReady();
+  assert.deepEqual(events, ["begin", "migration", "commit"]);
+  const rows = await database.sql`SELECT id, email FROM public.app_users`;
+  assert.equal(rows[0].id, user);
+});
+
+test("falha na migração causa rollback e não bloqueia consultas de autenticação", async () => {
+  const { database, events } = await productionFixture(
+    new Error("permission denied for schema public"),
+  );
+  await assert.rejects(() => database.ensureMonitoringReady(), /permission denied/);
+  assert.deepEqual(events, ["begin", "rollback"]);
+  const rows = await database.sql`SELECT id, email FROM public.app_users`;
+  assert.equal(rows[0].email, "usuario-existente@teste.local");
+  assert.equal(events.at(-1), "query");
 });

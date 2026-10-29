@@ -1,4 +1,4 @@
-import { sql } from "./db.server";
+import { ensureMonitoringReady, sql } from "./db.server";
 import { getSessionUser } from "./auth.server";
 
 // SQLite guarda timestamps sem fuso; PostgreSQL retorna objetos Date.
@@ -12,6 +12,7 @@ export function utcIso(value: string | Date | null): string | null {
 }
 
 export async function registrarPresenca(continuar: boolean) {
+  await ensureMonitoringReady();
   const user = await getSessionUser();
   if (!user?.sessionId) throw new Error("Sessão expirada. Faça login novamente.");
   const now = new Date().toISOString();
@@ -38,6 +39,7 @@ export async function registrarPresenca(continuar: boolean) {
 }
 
 export async function listarMonitoramento() {
+  await ensureMonitoringReady();
   const now = new Date().toISOString();
   const recent = new Date(Date.now() - 90_000).toISOString();
   const rows = await sql`
@@ -73,6 +75,7 @@ export async function listarMonitoramento() {
 }
 
 export async function listarSessoes(userId: string, page: number) {
+  await ensureMonitoringReady();
   const [total] =
     await sql` SELECT COUNT(*) AS total FROM public.user_sessions WHERE user_id = ${userId}::uuid `;
   const rows = await sql`

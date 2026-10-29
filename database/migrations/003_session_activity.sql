@@ -1,6 +1,7 @@
 -- Adição isolada: não altera usuários, senhas ou sessões existentes.
 -- Sem backfill: não é possível reconstruir o tempo de uso passado.
-BEGIN;
+-- A aplicação executa este arquivo dentro de sql.begin().
+-- Execução manual: usar uma transação única (psql --single-transaction).
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '15s';
 -- Serializa inicializações simultâneas de mais de uma instância da aplicação.
@@ -11,4 +12,3 @@ CREATE TABLE IF NOT EXISTS public.user_session_activity (
   active_seconds integer NOT NULL DEFAULT 0 CHECK (active_seconds >= 0),
   tracked_from timestamptz NOT NULL
 );
-COMMIT;

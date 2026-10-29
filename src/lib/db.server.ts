@@ -29,7 +29,10 @@ if (isProd) {
       path.join(process.cwd(), "database", "migrations", "003_session_activity.sql"),
       "utf-8",
     );
-    await postgresClient.unsafe(migration);
+    // O pool exige begin() para reservar a conexão e garantir commit/rollback.
+    await postgresClient.begin(async (transaction: postgres.TransactionSql) => {
+      await transaction.unsafe(migration);
+    });
   })();
   void databaseReady.catch((err) => console.error("[Database migration]", err));
 
@@ -131,11 +134,13 @@ if (isProd) {
   `).run("00000000-0000-0000-0000-000000000002", adminId);
 }
 
-/**
- * Função de consulta unificada que funciona tanto com SQLite (dev local) quanto com PostgreSQL (prod).
- */
-export async function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]> {
+// Apenas o monitoramento depende desta migração; autenticação usa o schema existente.
+export async function ensureMonitoringReady(): Promise<void> {
   await databaseReady;
+}
+
+/** Consulta unificada para SQLite (desenvolvimento) e PostgreSQL (produção). */
+export async function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]> {
   if (isProd && postgresClient) {
     return (postgresClient as any)(strings, ...values);
   }
