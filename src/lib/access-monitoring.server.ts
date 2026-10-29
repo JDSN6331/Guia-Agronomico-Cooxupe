@@ -59,7 +59,10 @@ export async function listarMonitoramento() {
       LEFT JOIN public.user_session_activity a ON a.session_id = s.id
       GROUP BY s.user_id
     ) m ON m.user_id = u.id
-    ORDER BY u.nome_completo, u.email
+    ORDER BY
+      CASE WHEN COALESCE(m.online_sessions, 0) > 0 THEN 0 ELSE 1 END,
+      COALESCE(m.last_login, u.last_sign_in_at) DESC NULLS LAST,
+      u.nome_completo, u.email
   `;
   return rows.map((r) => ({
     id: String(r.id),
