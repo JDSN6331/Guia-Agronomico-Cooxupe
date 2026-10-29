@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { entrarFn, obterSessaoFn, sairFn } from "./auth.functions";
+import { entrarFn, obterSessaoFn, registrarPresencaFn, sairFn } from "./auth.functions";
 
 export type Papel = "admin" | "tecnico";
 
@@ -223,6 +223,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       eventos.forEach((e) => window.removeEventListener(e, resetarTimer));
     };
   }, [user, sair]);
+
+  // Um único fluxo por aba; intervalos sobrepostos são deduplicados no servidor.
+  useEffect(() => {
+    if (!usuarioAtualId) return;
+    let cancelado = false;
+    let enviando = false;
+    let continuar = false;
+    const enviar = async () => {
+      if (document.visibilityState !== "visible") {
+        continuar = false;
+        return;
+      }
+      if (enviando) return;
+      enviando = true;
+      try {
+        await registrarPresencaFn({ data: { continuar } });
+        if (!cancelado) continuar = document.visibilityState === "visible";
+      } catch {
+        continuar = false;
+      } finally {
+        enviando = false;
+      }
+    };
+    const visibilidade = () => {
+      continuar = false;
+      if (document.visibilityState === "visible") void enviar();
+    };
+    void enviar();
+    const timer = window.setInterval(() => void enviar(), 60_000);
+    document.addEventListener("visibilitychange", visibilidade);
+    return () => {
+      cancelado = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", visibilidade);
+    };
+  }, [usuarioAtualId]);
 
   const session = useMemo(() => (user ? { user } : null), [user]);
 

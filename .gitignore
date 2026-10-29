@@ -38,3 +38,6 @@ database/*.sqlite-wal
 *.njsproj
 *.sln
 *.sw?
+
+# Cache local de ferramentas
+.cache/

@@ -11,6 +11,7 @@ const isProd =
 
 let postgresClient: any = null;
 let sqliteDb: any = null;
+let databaseReady: Promise<unknown> = Promise.resolve();
 
 if (isProd) {
   const DATABASE_URL =
@@ -22,25 +23,16 @@ if (isProd) {
     connect_timeout: 10,
   });
 
-  // Executar auto-inicialização das tabelas PostgreSQL em produção na startup
-  try {
-    const initSqlPath = path.join(process.cwd(), "database", "init", "001_postgres_base.sql");
-    const seedSqlPath = path.join(process.cwd(), "database", "init", "002_dev_seed.sql");
+  // Produção já possui o schema base: nunca reaplicar seeds ou reconstruí-lo.
+  databaseReady = (async () => {
+    const migration = fs.readFileSync(
+      path.join(process.cwd(), "database", "migrations", "003_session_activity.sql"),
+      "utf-8",
+    );
+    await postgresClient.unsafe(migration);
+  })();
+  void databaseReady.catch((err) => console.error("[Database migration]", err));
 
-    if (fs.existsSync(initSqlPath)) {
-      const initSql = fs.readFileSync(initSqlPath, "utf-8");
-      postgresClient.unsafe(initSql).then(() => {
-        if (fs.existsSync(seedSqlPath)) {
-          const seedSql = fs.readFileSync(seedSqlPath, "utf-8");
-          return postgresClient.unsafe(seedSql);
-        }
-      }).catch((err: any) => {
-        console.error("[PostgreSQL Auto-Init Error]:", err?.message || err);
-      });
-    }
-  } catch (e: any) {
-    console.error("[PostgreSQL Setup Error]:", e?.message || e);
-  }
 } else {
   // Inicialização do SQLite para desenvolvimento local (import dinâmico para não carregar nativos em produção)
   const { default: Database } = await import("better-sqlite3");
@@ -108,6 +100,12 @@ if (isProd) {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(user_id) REFERENCES app_users(id) ON DELETE CASCADE
     );
+    CREATE TABLE IF NOT EXISTS user_session_activity (
+      session_id TEXT PRIMARY KEY REFERENCES user_sessions(id) ON DELETE CASCADE,
+      last_seen_at TEXT NOT NULL,
+      active_seconds INTEGER NOT NULL DEFAULT 0 CHECK (active_seconds >= 0),
+      tracked_from TEXT NOT NULL
+    );
   `);
 
   // Restauração / Seed do administrador principal no SQLite local
@@ -137,6 +135,7 @@ if (isProd) {
  * Função de consulta unificada que funciona tanto com SQLite (dev local) quanto com PostgreSQL (prod).
  */
 export async function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]> {
+  await databaseReady;
   if (isProd && postgresClient) {
     return (postgresClient as any)(strings, ...values);
   }

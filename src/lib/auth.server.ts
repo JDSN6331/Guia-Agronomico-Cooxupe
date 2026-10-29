@@ -10,6 +10,7 @@ import {
 } from "./email.server";
 
 export type SessionUser = {
+  sessionId?: string;
   id: string;
   email: string;
   nomeCompleto: string | null;
@@ -116,6 +117,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       if (papeis.length === 0) papeis.push("tecnico");
 
       return {
+        sessionId: row.session_id,
         id: row.user_id,
         email: row.email,
         nomeCompleto: row.nome_completo || row.email,
@@ -229,7 +231,7 @@ export async function encerrarSessao() {
       await sql`
         UPDATE public.user_sessions
         SET revoked_at = CURRENT_TIMESTAMP
-        WHERE session_token_hash = ${tokenHash}
+        WHERE session_token_hash = ${tokenHash} AND revoked_at IS NULL
       `;
     }
   } catch {

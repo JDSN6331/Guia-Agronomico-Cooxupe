@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "db:logs": "docker compose logs -f postgres"
+    "db:logs": "docker compose logs -f postgres",
+    "test:monitoramento": "node --test tests/access-monitoring.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

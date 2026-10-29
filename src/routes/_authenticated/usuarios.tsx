@@ -1,3 +1,4 @@
+import { AccessMonitoring } from "@/components/access-monitoring";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -183,7 +184,7 @@ function PaginaGestaoSistema() {
   }
 
   // Permitir visualização segura para administradores
-  const ehAdmin = isAdmin || user?.email?.includes("duque") || false;
+  const ehAdmin = isAdmin;
 
   if (!ehAdmin) {
     return (
@@ -206,12 +207,15 @@ function PaginaGestaoSistema() {
     >
       <div className="mx-auto max-w-6xl space-y-6">
         <Tabs defaultValue="usuarios" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="flex w-full flex-wrap h-auto justify-start gap-1">
             <TabsTrigger value="usuarios" className="gap-2 text-xs font-bold">
               <Users className="size-4" /> Usuários e Permissões {usuarios.data ? `(${usuarios.data.length})` : ""}
             </TabsTrigger>
             <TabsTrigger value="dados" className="gap-2 text-xs font-bold">
               <FileSpreadsheet className="size-4" /> Atualização da Base (Planilha)
+            </TabsTrigger>
+            <TabsTrigger value="acessos" className="gap-2 text-xs font-bold">
+              <History className="size-4" /> Monitoramento de Acessos
             </TabsTrigger>
           </TabsList>
 
@@ -350,6 +354,8 @@ function PaginaGestaoSistema() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="acessos" className="mt-5"><AccessMonitoring /></TabsContent>
 
           {/* Aba 2: Atualização da Base (Upload de Excel / JSON) */}
           <TabsContent value="dados" className="mt-5 space-y-6">

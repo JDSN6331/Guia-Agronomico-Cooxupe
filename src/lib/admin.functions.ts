@@ -1,3 +1,4 @@
+import { listarMonitoramento, listarSessoes } from "./access-monitoring.server";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -129,3 +130,17 @@ export const assumirPrimeiroAdminFn = createServerFn({ method: "POST" }).handler
   await definirPapel(sessionUser.id, "admin");
   return { ok: true as const };
 });
+
+export const listarMonitoramentoFn = createServerFn({ method: "POST" }).handler(async () => {
+  await requireAdminSession();
+  return listarMonitoramento();
+});
+
+export const listarSessoesFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) => z.object({
+    userId: z.string().uuid(), page: z.number().int().min(0).max(100000).default(0),
+  }).parse(input))
+  .handler(async ({ data }) => {
+    await requireAdminSession();
+    return listarSessoes(data.userId, data.page);
+  });

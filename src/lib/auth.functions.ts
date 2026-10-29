@@ -1,3 +1,4 @@
+import { registrarPresenca } from "./access-monitoring.server";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -95,3 +96,7 @@ export const ativarContaComCodigoFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     return await ativarContaComCodigo(data.email, data.codigo, data.senha);
   });
+
+export const registrarPresencaFn = createServerFn({ method: "POST" })
+  .validator((input: unknown) => z.object({ continuar: z.boolean() }).parse(input))
+  .handler(async ({ data }) => registrarPresenca(data.continuar));
